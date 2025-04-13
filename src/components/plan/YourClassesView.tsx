@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import SubjectPill from './SubjectPill';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClassSchedule } from '../../lib/hooks/useClassSchedule';
-import { CalendarClock, ArrowRight } from 'lucide-react';
+import { CalendarClock, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function YourClassesView() {
   const { classDays, loading, error, currentDate, navigateRelative } = useClassSchedule();
@@ -125,7 +125,7 @@ export default function YourClassesView() {
     if (subjects.length === 0) return isCenter ? '400px' : '360px'; // Empty state
     if (subjects.length <= 2) return isCenter ? '460px' : '420px'; // Few subjects
     if (subjects.length <= 4) return isCenter ? '520px' : '480px'; // Medium subjects
-    return isCenter ? '580px' : '540px'; // Many subjects
+    return 'auto'; // Allow the card to expand based on content
   };
 
   // Add a new function to find the next day with classes
@@ -207,7 +207,8 @@ export default function YourClassesView() {
                         '340px',
                       height: typeof window !== 'undefined' && window.innerWidth < 640 
                         ? (day.subjects.length === 0 ? '300px' : day.subjects.length <= 2 ? '350px' : '400px')
-                        : dynamicHeight,
+                        : (isExpanded ? 'auto' : dynamicHeight),
+                      maxHeight: isExpanded ? 'calc(100vh - 100px)' : undefined,
                       opacity: isCenter ? 1 : 0.6,
                       zIndex: isCenter ? 10 : 1,
                     }}
@@ -240,10 +241,12 @@ export default function YourClassesView() {
                     {day.subjects.length > 0 ? (
                       <div 
                         className={`mt-4 sm:mt-6 pb-16 sm:pb-20 ${
-                          isExpanded ? 'overflow-y-auto scrollbar-hide pr-2' : 'overflow-hidden'
+                          isExpanded ? 'overflow-y-auto scrollbar-hide pr-2' : 'overflow-y-auto scrollbar-hide pr-2'
                         }`}
                         style={{ 
-                          maxHeight: isExpanded ? '400px' : (typeof window !== 'undefined' && window.innerWidth < 768 ? '250px' : '300px'),
+                          maxHeight: isExpanded ? 
+                            (typeof window !== 'undefined' && window.innerWidth < 768 ? 'calc(100vh - 200px)' : 'calc(100vh - 240px)') : 
+                            (typeof window !== 'undefined' && window.innerWidth < 768 ? '250px' : '300px'),
                           maskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none',
                           WebkitMaskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none'
                         }}
@@ -331,14 +334,22 @@ export default function YourClassesView() {
                       </div>
                     )}
                     
-                    {hasMultipleSubjects && isCenter && !isExpanded && (
+                    {/* Expand/collapse button for cards with multiple subjects */}
+                    {hasMultipleSubjects && isCenter && (
                       <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 flex justify-center">
-                        <div className="flex flex-col items-center">
-                          <div className="text-xs text-gray-500 mb-1">More subjects</div>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent other click handlers
+                            toggleCardExpansion(index);
+                          }}
+                          className="flex items-center gap-1.5 backdrop-blur-sm bg-white/80 px-3 py-1.5 rounded-full shadow-sm transition-all hover:shadow-md text-xs"
+                        >
+                          <span>{isExpanded ? "Collapse" : "Expand"}</span>
+                          {isExpanded ? 
+                            <ChevronUp className="h-3.5 w-3.5 text-gray-500" /> : 
+                            <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
+                          }
+                        </button>
                       </div>
                     )}
                     
