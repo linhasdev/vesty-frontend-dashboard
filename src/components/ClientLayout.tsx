@@ -76,12 +76,12 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
             </div>
             
             {/* Main content */}
-            <div className="flex-1 flex flex-col h-screen">
-              {/* Header with toggle button (no border) */}
-              <header className="h-16 flex items-center px-4 bg-transparent">
+            <div className="flex-1 flex flex-col h-screen relative">
+              {/* Header with toggle button (completely transparent) */}
+              <header className="absolute top-0 left-0 right-0 h-16 flex items-center px-4 z-10">
                 <button 
                   onClick={toggleSidebar}
-                  className="h-8 w-8 p-1 rounded-md flex items-center justify-center hover:bg-accent transition-colors duration-200"
+                  className="h-8 w-8 p-1 rounded-md flex items-center justify-center hover:bg-accent/10 transition-colors duration-200"
                   aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
                 >
                   <PanelLeft 
@@ -92,7 +92,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
                 </button>
               </header>
               
-              <main className="flex-1 p-4 overflow-y-auto">
+              <main className="flex-1 pt-16 overflow-hidden">
                 {children}
               </main>
             </div>

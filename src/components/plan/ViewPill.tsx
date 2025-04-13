@@ -22,7 +22,12 @@ export default function ViewPill({ currentView, views, onChangeView }: ViewPillP
   };
   
   return (
-    <div className="flex justify-center mb-4 mt-4 sm:mt-8">
+    <motion.div 
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="flex justify-center mb-4 mt-4 sm:mt-8"
+    >
       <div className="flex items-center bg-[#f0f0f0] px-1 py-1 rounded-full w-[90%] max-w-xs sm:w-80">
         <button 
           onClick={handlePrevious}
@@ -57,6 +62,6 @@ export default function ViewPill({ currentView, views, onChangeView }: ViewPillP
           </svg>
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 } 

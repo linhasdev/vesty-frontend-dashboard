@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ViewPill from '../../components/plan/ViewPill';
 import YourClassesView from '../../components/plan/YourClassesView';
 import CalendarView from '../../components/plan/CalendarView';
@@ -69,9 +69,12 @@ const subjectsData = [
 
 export default function PlanPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const views = ["Your Classes", "Calendar", "Subjects", "Progress"];
   const [currentView, setCurrentView] = useState(views[0]);
   const [isMobile, setIsMobile] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   // Check if we're on mobile when component mounts and on window resize
   useEffect(() => {
@@ -105,14 +108,37 @@ export default function PlanPage() {
         setCurrentView(matchedView);
       }
     }
+    
+    // Mark initial load as complete
+    setInitialLoad(false);
   }, [searchParams, views]);
+
+  // Handler for view changes
+  const handleViewChange = (newView: string) => {
+    setCurrentView(newView);
+    
+    // Update URL with the new view (use lowercase for URL parameter)
+    const newViewParam = newView.toLowerCase();
+    
+    // Only update URL after initial load to prevent interference with direct navigation
+    if (!initialLoad) {
+      // Create a new URLSearchParams object
+      const params = new URLSearchParams(searchParams.toString());
+      
+      // Set the view parameter
+      params.set('view', newViewParam);
+      
+      // Update the URL without full page refresh
+      router.push(`${pathname}?${params.toString()}`);
+    }
+  };
 
   return (
     <div className="w-full min-h-[90vh] flex flex-col px-2 sm:px-4">
       <ViewPill
         currentView={currentView}
         views={views}
-        onChangeView={setCurrentView}
+        onChangeView={handleViewChange}
       />
       
       <div className="flex-1 relative">
