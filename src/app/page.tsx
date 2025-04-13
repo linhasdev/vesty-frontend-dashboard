@@ -1,6 +1,5 @@
 "use client";
 
-import AnimatedSearch from "../components/AnimatedSearch";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -47,14 +46,9 @@ export default function Home() {
       initial="hidden"
       animate="visible"
     >
-      {/* Animated Search Button */}
-      <div className="mb-6 pt-2">
-        <AnimatedSearch />
-      </div>
-
       {/* Main "Keep Watching" Card */}
       <motion.div 
-        className="mb-6 h-[45%] mx-2"
+        className="mb-6 h-[45%] mx-2 mt-4"
         variants={mainCardVariants}
       >
         <div 
