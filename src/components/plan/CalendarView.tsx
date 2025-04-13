@@ -12,6 +12,9 @@ interface CalendarDay {
   subjects: StudySession[];
 }
 
+// Debug mode to show sessions data in console
+const DEBUG_MODE = true;
+
 export default function CalendarView() {
   const { sessions, loading, error } = useStudySessions();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -124,13 +127,99 @@ export default function CalendarView() {
 
   // Helper function to filter subjects for a specific date
   const filterSubjectsForDate = (allSubjects: StudySession[], date: Date) => {
-    const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    if (!allSubjects || allSubjects.length === 0) {
+      return [];
+    }
+
+    // Format date as YYYY-MM-DD without time component
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
+    // Debug log
+    const monthName = date.toLocaleString('default', { month: 'long' });
+    if (day === '1' || day === '15') {
+      console.log(`Looking for sessions on ${dateString} (${monthName} ${day}, ${year})`);
+    }
     
     // First filter subjects for this date
     const subjectsForDate = allSubjects.filter(subject => {
-      const subjectDate = new Date(subject.date).toISOString().split('T')[0];
-      return subjectDate === dateString;
+      if (!subject.date) return false;
+      
+      // For string dates (which is what we expect from the API)
+      if (typeof subject.date === 'string') {
+        // Normalize the date string by removing any time component
+        const normalizedDate = subject.date.split('T')[0];
+        
+        // Debug log on match
+        if (normalizedDate === dateString) {
+          console.log(`Match found for ${dateString}: ${subject.name}`);
+        }
+        
+        return normalizedDate === dateString;
+      }
+      
+      // Handle object dates (shouldn't happen with our API, but just in case)
+      try {
+        let dateObj: Date;
+        
+        if ((subject.date as any) instanceof Date) {
+          dateObj = subject.date as Date;
+        } else if (typeof subject.date === 'object') {
+          // Try Firestore timestamp
+          if ('toDate' in (subject.date as any)) {
+            dateObj = (subject.date as any).toDate();
+          } else if ((subject.date as any).seconds) {
+            dateObj = new Date((subject.date as any).seconds * 1000);
+          } else {
+            dateObj = new Date(subject.date as any);
+          }
+        } else {
+          dateObj = new Date(subject.date as any);
+        }
+        
+        // Format as YYYY-MM-DD string
+        const subjectYear = dateObj.getFullYear();
+        const subjectMonth = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const subjectDay = String(dateObj.getDate()).padStart(2, '0');
+        const subjectDateString = `${subjectYear}-${subjectMonth}-${subjectDay}`;
+        
+        // Debug log on match
+        if (subjectDateString === dateString) {
+          console.log(`Match found for ${dateString}: ${subject.name} (object date)`);
+        }
+        
+        return subjectDateString === dateString;
+      } catch (e) {
+        console.error('Error parsing date:', subject.date, e);
+        return false;
+      }
     });
+    
+    // If no sessions found for a day in July, August, September, or October, log it
+    const currentMonth = date.getMonth() + 1; // 1-12 format
+    if ((currentMonth >= 7 && currentMonth <= 10) && day === '15' && subjectsForDate.length === 0) {
+      console.warn(`No sessions found for the middle of month ${currentMonth} (${dateString})`);
+      
+      // Check if any sessions exist for this month
+      const sessionsInMonth = allSubjects.filter(subject => {
+        if (!subject.date) return false;
+        
+        try {
+          const subjectDate = new Date(subject.date);
+          return subjectDate.getMonth() + 1 === currentMonth;
+        } catch (e) {
+          return false;
+        }
+      });
+      
+      console.log(`Total sessions in month ${currentMonth}: ${sessionsInMonth.length}`);
+      if (sessionsInMonth.length > 0) {
+        console.log(`Example dates in month ${currentMonth}:`, 
+          sessionsInMonth.slice(0, 3).map(s => s.date));
+      }
+    }
     
     // Group subjects by name to avoid duplicates
     const groupedSubjects = subjectsForDate.reduce<Record<string, StudySession>>((acc, subject) => {
@@ -178,6 +267,53 @@ export default function CalendarView() {
       }
     }
   };
+
+  // Add an effect to log all sessions once when they're loaded
+  useEffect(() => {
+    if (DEBUG_MODE && sessions.length > 0) {
+      console.log("All available sessions:", sessions);
+      
+      // Count sessions by month to help diagnose issues
+      const sessionsByMonth: Record<string, number> = {};
+      
+      sessions.forEach(session => {
+        if (!session.date) return;
+        
+        try {
+          let sessionDate: Date;
+          
+          if (typeof session.date === 'string') {
+            sessionDate = new Date(session.date);
+          } else if ((session.date as any) instanceof Date) {
+            sessionDate = session.date as Date;
+          } else if (typeof session.date === 'object') {
+            // Try Firestore timestamp
+            if ('toDate' in (session.date as any)) {
+              sessionDate = (session.date as any).toDate();
+            } else if ((session.date as any).seconds) {
+              sessionDate = new Date((session.date as any).seconds * 1000);
+            } else {
+              sessionDate = new Date(session.date as any);
+            }
+          } else {
+            sessionDate = new Date(session.date as any);
+          }
+          
+          if (isNaN(sessionDate.getTime())) {
+            console.error("Invalid date:", session.date);
+            return;
+          }
+          
+          const monthKey = `${sessionDate.getFullYear()}-${sessionDate.getMonth() + 1}`;
+          sessionsByMonth[monthKey] = (sessionsByMonth[monthKey] || 0) + 1;
+        } catch (e) {
+          console.error("Error processing date:", session.date, e);
+        }
+      });
+      
+      console.log("Sessions by month:", sessionsByMonth);
+    }
+  }, [sessions]);
 
   return (
     <div className="w-full mt-2">

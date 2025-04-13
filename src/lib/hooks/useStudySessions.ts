@@ -88,26 +88,41 @@ export function useStudySessions() {
       const thirtyDaysAgo = new Date(today);
       thirtyDaysAgo.setDate(today.getDate() - 30);
       const ninetyDaysLater = new Date(today);
-      ninetyDaysLater.setDate(today.getDate() + 90);
+      ninetyDaysLater.setDate(today.getDate() + 365); // Changed from 90 to 365 days to show the whole year
       
       // Then get subject calendar entries for these scheduled classes with date filter
       const { data: calendarData, error: calendarError } = await supabase
         .from('subject_calendar')
         .select('*')
-        .in('scheduled_id', scheduledIds)
-        .gte('date_calendar', thirtyDaysAgo.toISOString().split('T')[0])
-        .lte('date_calendar', ninetyDaysLater.toISOString().split('T')[0]);
+        .in('scheduled_id', scheduledIds);
+        // Removed date filter restrictions to get all dates
+        //.gte('date_calendar', thirtyDaysAgo.toISOString().split('T')[0])
+        //.lte('date_calendar', ninetyDaysLater.toISOString().split('T')[0]);
         
       if (calendarError) throw calendarError;
+      
+      // Log the date range for debugging
+      console.log(`Fetching sessions from ${thirtyDaysAgo.toISOString().split('T')[0]} to ${ninetyDaysLater.toISOString().split('T')[0]}`);
+      console.log(`Found ${calendarData.length} total sessions`);
 
       // Transform the data to match the Subject interface (avoid unnecessary operations)
-      const formattedSessions = calendarData.map(entry => ({
-        id: entry.id.toString(),
-        name: entry.subject,
-        // Get color based on subject name or use default
-        color: subjectColorMap[entry.subject] || subjectColorMap.default,
-        date: entry.date_calendar
-      }));
+      const formattedSessions = calendarData.map(entry => {
+        // Debug log for date understanding
+        if (entry.date_calendar) {
+          const date = new Date(entry.date_calendar);
+          const month = date.getMonth() + 1; // 0-indexed to 1-indexed
+          const year = date.getFullYear();
+          console.log(`Session: ${entry.subject}, Date: ${entry.date_calendar}, Month: ${month}, Year: ${year}`);
+        }
+        
+        return {
+          id: entry.id.toString(),
+          name: entry.subject,
+          // Get color based on subject name or use default
+          color: subjectColorMap[entry.subject] || subjectColorMap.default,
+          date: entry.date_calendar
+        };
+      });
 
       // Update the cache
       sessionCache = {
