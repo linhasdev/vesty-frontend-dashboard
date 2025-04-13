@@ -1,5 +1,5 @@
 import type * as React from "react"
-import { BookOpen, Calendar, Home, LineChart, Play, Settings, User } from 'lucide-react'
+import { BookOpen, Calendar, Home, LineChart, Play, Settings, User, ClipboardCheck } from 'lucide-react'
 
 import {
   Sidebar,
@@ -34,18 +34,18 @@ const navigationData = [
     title: "Planejamento",
     items: [
       {
-        title: "Plan",
+        title: "Planejamento",
+        url: "/plan",
+        icon: ClipboardCheck,
+      },
+      {
+        title: "Suas Aulas",
         url: "/plan",
         icon: BookOpen,
       },
       {
-        title: "Suas Aulas",
-        url: "/your-classes",
-        icon: BookOpen,
-      },
-      {
         title: "Calendário",
-        url: "/calendar",
+        url: "/plan?view=calendar",
         icon: Calendar,
       },
       {

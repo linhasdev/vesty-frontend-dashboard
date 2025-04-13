@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 import ViewPill from '../../components/plan/ViewPill';
 import YourClassesView from '../../components/plan/YourClassesView';
 import CalendarView from '../../components/plan/CalendarView';
@@ -67,6 +68,7 @@ const subjectsData = [
 ];
 
 export default function PlanPage() {
+  const searchParams = useSearchParams();
   const views = ["Your Classes", "Calendar", "Subjects", "Progress"];
   const [currentView, setCurrentView] = useState(views[0]);
   const [isMobile, setIsMobile] = useState(false);
@@ -88,6 +90,22 @@ export default function PlanPage() {
       window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
+
+  // Handle URL parameters for initial view
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    if (viewParam) {
+      // Convert view parameter to match our view names (capitalize first letter)
+      const formattedView = viewParam.charAt(0).toUpperCase() + viewParam.slice(1);
+      
+      // Find matching view
+      const matchedView = views.find(v => v.toLowerCase().includes(formattedView.toLowerCase()));
+      
+      if (matchedView) {
+        setCurrentView(matchedView);
+      }
+    }
+  }, [searchParams, views]);
 
   return (
     <div className="w-full min-h-[90vh] flex flex-col px-2 sm:px-4">
