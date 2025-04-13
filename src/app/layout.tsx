@@ -1,5 +1,5 @@
 import "./globals.css";
-import Sidebar from "../components/Sidebar";
+import ClientLayout from "../components/ClientLayout";
 
 export const metadata = {
   title: 'Vesty Dashboard',
@@ -19,10 +19,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
       </head>
       <body className="bg-white font-inter overflow-x-hidden">
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 ml-12 p-6 max-w-[calc(100vw-3rem)] overflow-x-hidden">{children}</main>
-        </div>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

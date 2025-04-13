@@ -22,7 +22,7 @@ export default function ViewPill({ currentView, views, onChangeView }: ViewPillP
   };
   
   return (
-    <div className="flex justify-center mb-8 mt-16">
+    <div className="flex justify-center mb-4 mt-8">
       <div className="flex items-center bg-[#f0f0f0] px-1 py-1 rounded-full w-80">
         <button 
           onClick={handlePrevious}

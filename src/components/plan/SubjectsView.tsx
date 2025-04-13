@@ -16,7 +16,7 @@ interface SubjectsViewProps {
 
 export default function SubjectsView({ subjects }: SubjectsViewProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 pb-10 max-w-6xl mx-auto mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 pb-10 max-w-6xl mx-auto mt-2">
       {subjects.map((subject) => (
         <div 
           key={subject.id}

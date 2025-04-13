@@ -1,19 +1,45 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { getCurrentUser, getCurrentSession, signOut } from '../services/authService';
-import supabase from '../lib/supabase';
+// Fix the import path for authService - implement it directly since it seems to be missing
+// import { getCurrentUser, getCurrentSession, signOut } from '../services/authService';
+import supabase from '../supabase/supabase';
 import { useRouter } from 'next/navigation';
 
+interface AuthContextType {
+  user: any;
+  session: any;
+  isAuthenticated: boolean;
+  loading: boolean;
+  logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+}
+
 // Create the auth context
-const AuthContext = createContext(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 // Create a provider component
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Implementation of missing authService functions
+  const getCurrentSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session;
+  };
+
+  const getCurrentUser = async () => {
+    const { data } = await supabase.auth.getUser();
+    return data.user;
+  };
+
+  const signOut = async () => {
+    return supabase.auth.signOut();
+  };
 
   useEffect(() => {
     // Check for existing session on mount
@@ -38,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: string, session: any) => {
         setSession(session);
         setUser(session?.user || null);
         setLoading(false);
@@ -57,6 +83,7 @@ export const AuthProvider = ({ children }) => {
       await signOut();
       setUser(null);
       setSession(null);
+      router.push('/login');
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -65,7 +92,7 @@ export const AuthProvider = ({ children }) => {
   // Update the redirect paths in the login, signUp, and any other relevant functions
   // For example:
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -79,10 +106,10 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setSession(data.session);
       
-      // Redirect to dashboard after login (Next.js will handle this)
-      router.push('/app-dashboard');
+      // Redirect to dashboard after login
+      router.push('/plan');
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error logging in:', error.message);
       throw error;
     } finally {
@@ -91,7 +118,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Similarly update the signup function to redirect to dashboard
-  const signUp = async (email, password) => {
+  const signUp = async (email: string, password: string) => {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -106,11 +133,11 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
         setSession(data.session);
         
-        // Redirect to dashboard after signup (Next.js will handle this)
-        router.push('/app-dashboard');
+        // Redirect to dashboard after signup
+        router.push('/plan');
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing up:', error.message);
       throw error;
     } finally {
@@ -119,7 +146,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Value to be provided by the context
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     isAuthenticated: !!session,
@@ -137,7 +164,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 // Custom hook to use the auth context
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === null) {
     throw new Error('useAuth must be used within an AuthProvider');

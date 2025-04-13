@@ -1,46 +1,119 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import SubjectPill from './SubjectPill';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useClassSchedule } from '../../lib/hooks/useClassSchedule';
+import { CalendarClock, ArrowRight } from 'lucide-react';
 
-interface ClassDay {
-  date: string;
-  dayName: string;
-  displayName: string;
-  subjects: {
-    name: string;
-    color: string;
-    timeRanges: string[];  // Changed to array for multiple time ranges
-  }[];
-}
-
-interface YourClassesViewProps {
-  data: ClassDay[];
-}
-
-export default function YourClassesView({ data }: YourClassesViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(1); // Start with "Today"
+export default function YourClassesView() {
+  const { classDays, loading, error, currentDate, navigateRelative } = useClassSchedule();
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null); // Start with null instead of 15
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [animationDirection, setAnimationDirection] = useState(0); // -1 for left, 1 for right, 0 for initial
   const expandedCardRef = useRef<HTMLDivElement>(null);
+  const [initialRenderComplete, setInitialRenderComplete] = useState(false);
   
-  const visibleDays = [
-    data[(currentIndex - 1 + data.length) % data.length], // Yesterday
-    data[currentIndex], // Today
-    data[(currentIndex + 1) % data.length], // Tomorrow
-  ];
+  // Reset current index when classDays changes
+  useEffect(() => {
+    if (!classDays || classDays.length === 0) return;
+    
+    // Find today's index in the classDays array
+    const todayIndex = classDays.findIndex(day => day.displayName === 'Today');
+    
+    console.log('Today index:', todayIndex, 'Today date:', new Date().toLocaleDateString());
+    console.log('Class days:', classDays.map(day => ({
+      displayName: day.displayName,
+      date: day.date,
+      actualDate: day.actualDate
+    })));
+    
+    if (todayIndex !== -1) {
+      setCurrentIndex(todayIndex);
+    } else {
+      // If "Today" not found, try to find the middle
+      setCurrentIndex(Math.floor(classDays.length / 2));
+    }
+
+    // Set initial render complete after setting the index
+    setInitialRenderComplete(true);
+  }, [classDays]);
+  
+  // Show loading state if data is loading or index not determined yet
+  if (loading || currentIndex === null || !initialRenderComplete) {
+    return (
+      <div className="relative w-full pb-10 px-4 mt-2">
+        <div className="flex justify-center items-center h-[480px]">
+          {/* Blank loading state - no indicator */}
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="relative w-full pb-10 px-4 mt-2">
+        <div className="flex justify-center items-center h-[480px]">
+          <div className="text-red-500">{error}</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Return early if no data is available
+  if (!classDays || classDays.length === 0) {
+    return (
+      <div className="relative w-full pb-10 px-4 mt-2">
+        <div className="flex justify-center items-center h-[480px]">
+          <div className="text-gray-500">No classes scheduled</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Get visible days - 3 consecutive days
+  const visibleDays = currentIndex !== null ? [
+    classDays[Math.max(0, Math.min(currentIndex - 1, classDays.length - 1))],
+    classDays[Math.max(0, Math.min(currentIndex, classDays.length - 1))],
+    classDays[Math.max(0, Math.min(currentIndex + 1, classDays.length - 1))],
+  ] : [];
   
   const handlePrevious = () => {
+    // If we're near the start of our data, fetch more
+    if (currentIndex !== null && currentIndex < 3) {
+      navigateRelative(-10); // Move 10 days back
+      return;
+    }
+    
     setAnimationDirection(-1);
     setExpandedCard(null);
-    setCurrentIndex((prev) => (prev - 1 + data.length) % data.length);
+    setCurrentIndex(prev => prev !== null ? Math.max(0, prev - 1) : 0);
   };
   
   const handleNext = () => {
+    // If we're near the end of our data, fetch more
+    if (currentIndex !== null && currentIndex > classDays.length - 4) {
+      navigateRelative(10); // Move 10 days forward
+      return;
+    }
+    
     setAnimationDirection(1);
     setExpandedCard(null);
-    setCurrentIndex((prev) => (prev + 1) % data.length);
+    setCurrentIndex(prev => prev !== null ? Math.min(classDays.length - 1, prev + 1) : 0);
+  };
+  
+  // Jump to today
+  const handleJumpToToday = () => {
+    const todayIndex = classDays.findIndex(day => day.displayName === 'Today');
+    if (todayIndex !== -1) {
+      setAnimationDirection(currentIndex !== null && currentIndex > todayIndex ? -1 : 1);
+      setExpandedCard(null);
+      setCurrentIndex(todayIndex);
+    } else {
+      // If "Today" is not in the current range, reset to today
+      navigateRelative(0);
+    }
   };
 
   const toggleCardExpansion = (index: number) => {
@@ -55,14 +128,46 @@ export default function YourClassesView({ data }: YourClassesViewProps) {
     return isCenter ? '580px' : '540px'; // Many subjects
   };
 
+  // Add a new function to find the next day with classes
+  const findNextDayWithClasses = () => {
+    if (currentIndex === null) return null;
+    
+    // Start searching from the day after current
+    for (let i = currentIndex + 1; i < classDays.length; i++) {
+      if (classDays[i].subjects.length > 0) {
+        return i;
+      }
+    }
+    
+    // If no day found after current, search from beginning
+    for (let i = 0; i < currentIndex; i++) {
+      if (classDays[i].subjects.length > 0) {
+        return i;
+      }
+    }
+    
+    // No day with classes found
+    return null;
+  };
+
+  // Add a function to handle navigation to the next class
+  const handleGoToNextClass = () => {
+    const nextClassIndex = findNextDayWithClasses();
+    if (nextClassIndex !== null) {
+      setAnimationDirection(1); // Always animate forward
+      setExpandedCard(null);
+      setCurrentIndex(nextClassIndex);
+    }
+  };
+
   return (
-    <div className="relative w-full pb-10 px-4 mt-6">
+    <div className="relative w-full pb-10 px-4 mt-2">
       <div className="flex justify-center items-center relative">
         <div className="max-w-6xl mx-auto w-full relative">
           {/* Day cards */}
           <AnimatePresence mode="wait" custom={animationDirection}>
             <div 
-              key={currentIndex}
+              key={`days-${currentIndex}`}
               className="flex justify-center items-stretch space-x-4 relative py-4"
             >
               {visibleDays.map((day, index) => {
@@ -70,13 +175,16 @@ export default function YourClassesView({ data }: YourClassesViewProps) {
                 const hasMultipleSubjects = day.subjects.length > 3;
                 const isExpanded = expandedCard === index;
                 const dynamicHeight = getCardHeight(day.subjects, isCenter);
+                const isToday = day.displayName === 'Today';
                 
                 return (
                   <motion.div
-                    key={`${day.displayName}-${index}`}
-                    className={`relative rounded-xl p-6 ${isCenter ? 'bg-[#f0f0f0]' : 'bg-[#f8f8f8]'} 
+                    key={`${day.displayName}-${day.actualDate}-${index}`}
+                    className={`relative rounded-xl p-6 
+                      ${isCenter ? 'bg-[#f0f0f0]' : 'bg-[#f8f8f8]'} 
                       ${isCenter && hasMultipleSubjects ? (isExpanded ? 'cursor-auto' : 'cursor-pointer') : 'cursor-pointer'} 
-                      overflow-hidden`}
+                      overflow-hidden
+                      ${isToday ? 'ring-2 ring-emerald-500' : ''}`}
                     ref={isExpanded ? expandedCardRef : null}
                     onClick={() => {
                       if (isCenter && hasMultipleSubjects) {
@@ -98,13 +206,22 @@ export default function YourClassesView({ data }: YourClassesViewProps) {
                       scale: isCenter ? 1 : 0.85,
                       y: isCenter ? 0 : 10
                     }}
+                    exit={{ 
+                      opacity: 0,
+                      y: 10,
+                      transition: { duration: 0.2 }
+                    }}
                     transition={{ 
-                      duration: 0.6, 
-                      ease: [0.25, 0.1, 0.25, 1],
-                      delay: index * 0.1
+                      duration: 0.5, 
+                      ease: "easeOut",
+                      delay: index * 0.08
                     }}
                   >
-                    <h2 className="text-2xl font-medium mb-1">{day.displayName}</h2>
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-2xl font-medium mb-1">
+                        {day.displayName}
+                      </h2>
+                    </div>
                     <p className="text-sm text-gray-500 mb-4">
                       {day.dayName}, {day.date}
                     </p>
@@ -134,8 +251,24 @@ export default function YourClassesView({ data }: YourClassesViewProps) {
                         ))}
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center h-64">
-                        <p className="text-gray-400">No classes scheduled</p>
+                      <div className="flex flex-col items-center justify-center h-64 gap-4">
+                        <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100">
+                          <CalendarClock className="text-gray-400" size={20} />
+                          <span className="text-gray-600 font-medium text-xs">No scheduled classes</span>
+                        </div>
+                        
+                        {isCenter && findNextDayWithClasses() !== null && (
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card expansion trigger
+                              handleGoToNextClass();
+                            }}
+                            className="inline-flex bg-gradient-to-r from-emerald-500 to-green-500 text-white font-medium py-2.5 px-5 rounded-full items-center justify-center gap-2 transition-all shadow-sm text-sm hover:shadow-lg duration-300"
+                          >
+                            Go to next planned class
+                            <ArrowRight size={16} />
+                          </button>
+                        )}
                       </div>
                     )}
                     
@@ -165,7 +298,7 @@ export default function YourClassesView({ data }: YourClassesViewProps) {
         </div>
       </div>
       
-      {/* CSS for hiding scrollbars */}
+      {/* CSS for hiding scrollbars and gradient border */}
       <style jsx global>{`
         .scrollbar-hide {
           -ms-overflow-style: none;  /* IE and Edge */
