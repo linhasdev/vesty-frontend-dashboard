@@ -248,22 +248,65 @@ export default function YourClassesView() {
                           WebkitMaskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none'
                         }}
                       >
-                        {day.subjects.map((subject, i) => (
-                          <div key={i} className="mb-4 sm:mb-6">
-                            <SubjectPill 
-                              name={subject.name} 
-                              color={subject.color} 
-                              size={typeof window !== 'undefined' && window.innerWidth < 640 ? 'small' : 'normal'} 
-                            />
-                            <div className="mt-1 sm:mt-2 space-y-1">
-                              {subject.timeRanges.map((timeRange, timeIndex) => (
-                                <div key={timeIndex} className="bg-gray-100 rounded px-2 sm:px-3 py-1 sm:py-1.5 block w-full">
-                                  <p className="text-xs sm:text-sm text-gray-500">{timeRange}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                        <motion.div
+                          initial="hidden"
+                          animate="visible"
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: {
+                              opacity: 1,
+                              transition: {
+                                staggerChildren: 0.1,
+                                delayChildren: 0.2
+                              }
+                            }
+                          }}
+                        >
+                          {day.subjects.map((subject, i) => (
+                            <motion.div 
+                              key={i} 
+                              className="mb-4 sm:mb-6"
+                              variants={{
+                                hidden: { opacity: 0, y: 10 },
+                                visible: { 
+                                  opacity: 1, 
+                                  y: 0,
+                                  transition: {
+                                    duration: 0.3,
+                                    ease: "easeOut"
+                                  }
+                                }
+                              }}
+                            >
+                              <SubjectPill 
+                                name={subject.name} 
+                                color={subject.color} 
+                                size={typeof window !== 'undefined' && window.innerWidth < 640 ? 'small' : 'normal'} 
+                              />
+                              <div className="mt-1 sm:mt-2 space-y-1">
+                                {subject.timeRanges.map((timeRange, timeIndex) => (
+                                  <motion.div 
+                                    key={timeIndex} 
+                                    className="bg-gray-100 rounded px-2 sm:px-3 py-1 sm:py-1.5 block w-full"
+                                    variants={{
+                                      hidden: { opacity: 0, x: -5 },
+                                      visible: { 
+                                        opacity: 1, 
+                                        x: 0,
+                                        transition: {
+                                          duration: 0.2,
+                                          delay: 0.1 * timeIndex
+                                        }
+                                      }
+                                    }}
+                                  >
+                                    <p className="text-xs sm:text-sm text-gray-500">{timeRange}</p>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </motion.div>
+                          ))}
+                        </motion.div>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center h-48 sm:h-64 gap-4">

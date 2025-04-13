@@ -106,8 +106,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(data.user);
       setSession(data.session);
       
-      // Redirect to dashboard after login
-      router.push('/plan');
+      // Redirect to home page after login
+      router.push('/');
       
     } catch (error: any) {
       console.error('Error logging in:', error.message);
@@ -133,8 +133,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(data.user);
         setSession(data.session);
         
-        // Redirect to dashboard after signup
-        router.push('/plan');
+        // Redirect to home page after signup
+        router.push('/');
       }
       
     } catch (error: any) {

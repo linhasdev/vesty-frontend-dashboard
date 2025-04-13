@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from 'framer-motion';
+
 interface Subject {
   id: string;
   name: string;
@@ -15,12 +17,41 @@ interface SubjectsViewProps {
 }
 
 export default function SubjectsView({ subjects }: SubjectsViewProps) {
+  // Animation variants for staggered card animations
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 px-2 sm:px-4 pb-10 max-w-6xl mx-auto mt-2">
+    <motion.div 
+      className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 px-2 sm:px-4 pb-10 max-w-6xl mx-auto mt-2"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
       {subjects.map((subject) => (
-        <div 
+        <motion.div 
           key={subject.id}
           className="bg-[#f0f0f0] rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
+          variants={cardVariants}
         >
           <div className="flex items-center mb-3 sm:mb-4">
             <div
@@ -58,8 +89,8 @@ export default function SubjectsView({ subjects }: SubjectsViewProps) {
               <span>{subject.completedClasses} of {subject.totalClasses}</span>
             </div>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 } 

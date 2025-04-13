@@ -29,7 +29,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     // If on a public path but authenticated, redirect to dashboard
     if (publicPaths.includes(pathname) && isAuthenticated) {
       setIsNavigating(true);
-      router.push('/plan');
+      router.push('/');
       return;
     }
     

@@ -155,6 +155,30 @@ export default function CalendarView() {
   // Days of the week headers
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Animation variants for calendar cells
+  const calendarVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.01,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const cellVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    show: { 
+      opacity: 1, 
+      scale: 1,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    }
+  };
+
   return (
     <div className="w-full mt-2">
       <div className="max-w-6xl mx-auto relative px-2">
@@ -262,7 +286,12 @@ export default function CalendarView() {
               transition={{ duration: 0.3 }}
             >
               {/* Week day headers */}
-              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-3 sm:mb-10">
+              <motion.div 
+                className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-3 sm:mb-10"
+                variants={calendarVariants}
+                initial="hidden"
+                animate="show"
+              >
                 {weekDays.map((day) => (
                   <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-gray-500 py-0.5 sm:py-1">
                     {day.substring(0, 1)}
@@ -277,7 +306,7 @@ export default function CalendarView() {
                   const hasMoreIndicator = day.subjects.length > visibleCount;
                   
                   return (
-                    <div 
+                    <motion.div 
                       key={day.date.toISOString()}
                       className={`
                         rounded-lg p-0.5 sm:p-1 md:p-1.5
@@ -286,6 +315,7 @@ export default function CalendarView() {
                         ${hasSubjects && day.isCurrentMonth ? 'border-l-2 sm:border-l-3 border-accent-green' : ''}
                         flex flex-col h-12 sm:h-16 md:h-28
                       `}
+                      variants={cellVariants}
                     >
                       <div className="flex justify-between items-start mb-0.5">
                         <div className="flex-1 flex flex-wrap gap-0.5 sm:gap-1 pr-1 max-w-[70%]">
@@ -330,10 +360,10 @@ export default function CalendarView() {
                           </>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
-              </div>
+              </motion.div>
               
               {/* Mobile Month Swipe Instructions */}
               <div className="flex justify-center mt-2 mb-4 sm:hidden">

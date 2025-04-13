@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
-    router.push('/plan');
+    router.push('/');
     return null;
   }
 
