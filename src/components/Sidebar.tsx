@@ -1,10 +1,31 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Menu, X } from 'lucide-react';
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Check if mobile on mount and when window is resized
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   const menuItems = [
     {
@@ -47,31 +68,79 @@ export default function Sidebar() {
   ];
 
   return (
-    <div
-      className={`fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-[60] ${
-        isExpanded ? 'w-40' : 'w-12'
-      }`}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
-      <div className="flex flex-col h-full py-4">
-        {menuItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center">
-              {item.icon}
-              <span className={`ml-2.5 whitespace-nowrap transition-opacity duration-300 text-sm ${
-                isExpanded ? 'opacity-100' : 'opacity-0'
-              }`}>
-                {item.name}
-              </span>
-            </div>
-          </Link>
-        ))}
+    <>
+      {/* Mobile Menu Toggle Button */}
+      <button 
+        className="md:hidden fixed top-4 left-4 z-[70] bg-white p-2 rounded-full shadow-md"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        aria-label="Toggle menu"
+      >
+        {isMobileMenuOpen ? (
+          <X size={20} className="text-gray-700" />
+        ) : (
+          <Menu size={20} className="text-gray-700" />
+        )}
+      </button>
+
+      {/* Sidebar for Desktop */}
+      <div
+        className={`hidden md:block fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-[60] ${
+          isExpanded ? 'w-40' : 'w-12'
+        }`}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
+        <div className="flex flex-col h-full py-4">
+          {menuItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="flex items-center px-3 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center">
+                {item.icon}
+                <span className={`ml-2.5 whitespace-nowrap transition-opacity duration-300 text-sm ${
+                  isExpanded ? 'opacity-100' : 'opacity-0'
+                }`}>
+                  {item.name}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Mobile Sidebar - Full Screen Overlay */}
+      <div 
+        className={`md:hidden fixed inset-0 bg-black/50 z-[65] transition-opacity duration-300 ${
+          isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+      
+      <div
+        className={`md:hidden fixed left-0 top-0 h-full bg-white border-r border-gray-200 transition-all duration-300 z-[66] w-64 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full pt-16 pb-4">
+          {menuItems.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <div className="flex items-center">
+                {item.icon}
+                <span className="ml-3 text-base font-medium">
+                  {item.name}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </>
   );
 } 

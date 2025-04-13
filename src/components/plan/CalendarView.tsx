@@ -159,7 +159,7 @@ export default function CalendarView() {
     <div className="w-full mt-2">
       <div className="max-w-6xl mx-auto relative px-2">
         {/* Month heading with lateral arrows */}
-        <div className="flex items-center mb-6 justify-between">
+        <div className="flex items-center mb-3 sm:mb-6 justify-between">
           <div className="flex items-center">
             <div className="flex">
               <button 
@@ -218,7 +218,7 @@ export default function CalendarView() {
               transition={{ duration: 0.2 }}
             >
               {/* Calendar skeleton loader - more subtle design */}
-              <div className="grid grid-cols-7 gap-1 mb-10">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-10">
                 {/* Week day headers skeleton */}
                 {weekDays.map((day) => (
                   <div key={day} className="text-center text-xs font-medium text-gray-300 py-1">
@@ -230,7 +230,7 @@ export default function CalendarView() {
                 {Array.from({ length: 28 }).map((_, i) => (
                   <div 
                     key={`skeleton-${i}`}
-                    className="rounded-lg p-1.5 bg-gray-50 h-28 flex flex-col opacity-50"
+                    className="rounded-lg p-1.5 bg-gray-50 h-12 sm:h-16 md:h-28 flex flex-col opacity-50"
                   >
                     <div className="flex justify-end mb-1">
                       <div className="w-5 h-4 rounded-sm bg-gray-200"></div>
@@ -248,10 +248,10 @@ export default function CalendarView() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="text-red-500 py-4 text-center"
+              transition={{ duration: 0.2 }}
+              className="flex flex-col items-center justify-center p-10"
             >
-              {error}
+              <div className="text-red-500">{error}</div>
             </motion.div>
           ) : (
             <motion.div
@@ -259,17 +259,18 @@ export default function CalendarView() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="grid grid-cols-7 gap-1 mb-10">
-                {/* Week day headers */}
+              {/* Week day headers */}
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-3 sm:mb-10">
                 {weekDays.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-gray-500 py-1">
-                    {day}
+                  <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-gray-500 py-0.5 sm:py-1">
+                    {day.substring(0, 1)}
+                    <span className="hidden sm:inline">{day.substring(1)}</span>
                   </div>
                 ))}
                 
-                {/* Calendar days - no individual animations */}
+                {/* Calendar days */}
                 {calendarDays.map((day) => {
                   const hasSubjects = day.subjects.length > 0;
                   const visibleCount = getVisiblePillCount(day.subjects.length);
@@ -279,37 +280,37 @@ export default function CalendarView() {
                     <div 
                       key={day.date.toISOString()}
                       className={`
-                        rounded-lg p-1.5
+                        rounded-lg p-0.5 sm:p-1 md:p-1.5
                         ${day.isCurrentMonth ? 'bg-[#f0f0f0]' : 'bg-[#f8f8f8] opacity-30'}
-                        ${day.isToday ? 'ring-2 ring-accent-green' : ''}
-                        ${hasSubjects && day.isCurrentMonth ? 'border-l-3 border-accent-green' : ''}
-                        flex flex-col h-28
+                        ${day.isToday ? 'ring-1 sm:ring-2 ring-accent-green' : ''}
+                        ${hasSubjects && day.isCurrentMonth ? 'border-l-2 sm:border-l-3 border-accent-green' : ''}
+                        flex flex-col h-12 sm:h-16 md:h-28
                       `}
                     >
                       <div className="flex justify-between items-start mb-0.5">
-                        <div className="flex-1 flex flex-wrap gap-1 pr-1 max-w-[70%]">
+                        <div className="flex-1 flex flex-wrap gap-0.5 sm:gap-1 pr-1 max-w-[70%]">
                           {day.subjects.length > 0 && day.isCurrentMonth && (
                             <SubjectPill 
                               key={`${day.date.toISOString()}-subject-0`}
                               name={day.subjects[0].name} 
                               color={day.subjects[0].color} 
-                              size="tiny" 
+                              size={typeof window !== 'undefined' && window.innerWidth < 640 ? 'micro' : 'tiny'} 
                             />
                           )}
                         </div>
-                        <span className={`text-xs ${day.isCurrentMonth ? 'font-light' : 'text-gray-400 font-light'} ${day.isToday ? 'font-medium text-accent-green' : ''}`}>
+                        <span className={`text-[10px] sm:text-xs ${day.isCurrentMonth ? 'font-light' : 'text-gray-400 font-light'} ${day.isToday ? 'font-medium text-accent-green' : ''}`}>
                           {day.date.getDate()}
                         </span>
                       </div>
                       
                       {day.isToday && (
-                        <div className="text-[9px] font-medium text-accent-green bg-accent-green/10 px-1 py-0.5 rounded self-start mt-0.5 mb-1">Today</div>
+                        <div className="text-[8px] sm:text-[9px] font-medium text-accent-green bg-accent-green/10 px-1 py-0.5 rounded self-start mt-0.5 mb-1 hidden sm:block">Today</div>
                       )}
                       
                       <div className="flex-1 flex flex-col justify-start overflow-hidden">
                         {day.isCurrentMonth && (
                           <>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 hidden sm:flex">
                               {day.subjects.slice(1, visibleCount).map((subject, i) => (
                                 <SubjectPill 
                                   key={`${day.date.toISOString()}-subject-${i+1}`}
@@ -320,7 +321,11 @@ export default function CalendarView() {
                               ))}
                             </div>
                             {hasMoreIndicator && (
-                              <div className="text-[10px] text-gray-500 mt-0.5">+{day.subjects.length - visibleCount}</div>
+                              <div className="text-[10px] text-gray-500 mt-0.5 hidden sm:block">+{day.subjects.length - visibleCount}</div>
+                            )}
+                            {/* Mobile indicator for multiple subjects */}
+                            {hasSubjects && day.subjects.length > 1 && (
+                              <div className="text-[8px] sm:text-[10px] text-gray-500 mt-0.5 sm:hidden">+{day.subjects.length - 1}</div>
                             )}
                           </>
                         )}
@@ -328,6 +333,11 @@ export default function CalendarView() {
                     </div>
                   );
                 })}
+              </div>
+              
+              {/* Mobile Month Swipe Instructions */}
+              <div className="flex justify-center mt-2 mb-4 sm:hidden">
+                <p className="text-xs text-gray-500 italic">Swipe left/right to change months</p>
               </div>
             </motion.div>
           )}

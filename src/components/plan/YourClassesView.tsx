@@ -161,14 +161,14 @@ export default function YourClassesView() {
   };
 
   return (
-    <div className="relative w-full pb-10 px-4 mt-2">
+    <div className="relative w-full pb-10 px-2 sm:px-4 mt-2">
       <div className="flex justify-center items-center relative">
         <div className="max-w-6xl mx-auto w-full relative">
           {/* Day cards */}
           <AnimatePresence mode="wait" custom={animationDirection}>
             <div 
               key={`days-${currentIndex}`}
-              className="flex justify-center items-stretch space-x-4 relative py-4"
+              className="flex justify-center items-stretch space-x-4 relative py-2 sm:py-4"
             >
               {visibleDays.map((day, index) => {
                 const isCenter = index === 1;
@@ -177,10 +177,15 @@ export default function YourClassesView() {
                 const dynamicHeight = getCardHeight(day.subjects, isCenter);
                 const isToday = day.displayName === 'Today';
                 
+                // Hide side cards on mobile devices
+                if (!isCenter && typeof window !== 'undefined' && window.innerWidth < 768) {
+                  return null;
+                }
+                
                 return (
                   <motion.div
                     key={`${day.displayName}-${day.actualDate}-${index}`}
-                    className={`relative rounded-xl p-6 
+                    className={`relative rounded-xl p-3 sm:p-6 
                       ${isCenter ? 'bg-[#f0f0f0]' : 'bg-[#f8f8f8]'} 
                       ${isCenter && hasMultipleSubjects ? (isExpanded ? 'cursor-auto' : 'cursor-pointer') : 'cursor-pointer'} 
                       overflow-hidden
@@ -194,9 +199,15 @@ export default function YourClassesView() {
                       }
                     }}
                     style={{
-                      width: isCenter ? 'calc(100% - 24px)' : '340px',
-                      minWidth: isCenter ? '480px' : '340px',
-                      height: dynamicHeight,
+                      width: isCenter ? 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : 'calc(100% - 24px)') : 
+                        '340px',
+                      minWidth: isCenter ? 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '480px') : 
+                        '340px',
+                      height: typeof window !== 'undefined' && window.innerWidth < 640 
+                        ? (day.subjects.length === 0 ? '300px' : day.subjects.length <= 2 ? '350px' : '400px')
+                        : dynamicHeight,
                       opacity: isCenter ? 1 : 0.6,
                       zIndex: isCenter ? 10 : 1,
                     }}
@@ -218,32 +229,36 @@ export default function YourClassesView() {
                     }}
                   >
                     <div className="flex justify-between items-center">
-                      <h2 className="text-2xl font-medium mb-1">
+                      <h2 className="text-xl sm:text-2xl font-medium mb-1">
                         {day.displayName}
                       </h2>
                     </div>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-4">
                       {day.dayName}, {day.date}
                     </p>
                     
                     {day.subjects.length > 0 ? (
                       <div 
-                        className={`mt-6 pb-20 ${
+                        className={`mt-4 sm:mt-6 pb-16 sm:pb-20 ${
                           isExpanded ? 'overflow-y-auto scrollbar-hide pr-2' : 'overflow-hidden'
                         }`}
                         style={{ 
-                          maxHeight: isExpanded ? '400px' : '300px',
+                          maxHeight: isExpanded ? '400px' : (typeof window !== 'undefined' && window.innerWidth < 768 ? '250px' : '300px'),
                           maskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none',
                           WebkitMaskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none'
                         }}
                       >
                         {day.subjects.map((subject, i) => (
-                          <div key={i} className="mb-6">
-                            <SubjectPill name={subject.name} color={subject.color} size="normal" />
-                            <div className="mt-2 space-y-1">
+                          <div key={i} className="mb-4 sm:mb-6">
+                            <SubjectPill 
+                              name={subject.name} 
+                              color={subject.color} 
+                              size={typeof window !== 'undefined' && window.innerWidth < 640 ? 'small' : 'normal'} 
+                            />
+                            <div className="mt-1 sm:mt-2 space-y-1">
                               {subject.timeRanges.map((timeRange, timeIndex) => (
-                                <div key={timeIndex} className="bg-gray-100 rounded px-3 py-1.5 block w-full">
-                                  <p className="text-sm text-gray-500">{timeRange}</p>
+                                <div key={timeIndex} className="bg-gray-100 rounded px-2 sm:px-3 py-1 sm:py-1.5 block w-full">
+                                  <p className="text-xs sm:text-sm text-gray-500">{timeRange}</p>
                                 </div>
                               ))}
                             </div>
@@ -251,9 +266,9 @@ export default function YourClassesView() {
                         ))}
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-64 gap-4">
-                        <div className="flex items-center gap-3 p-4 rounded-lg bg-gray-50 border border-gray-100">
-                          <CalendarClock className="text-gray-400" size={20} />
+                      <div className="flex flex-col items-center justify-center h-48 sm:h-64 gap-4">
+                        <div className="flex items-center gap-3 p-3 sm:p-4 rounded-lg bg-gray-50 border border-gray-100">
+                          <CalendarClock className="text-gray-400" size={18} />
                           <span className="text-gray-600 font-medium text-xs">No scheduled classes</span>
                         </div>
                         
@@ -263,20 +278,21 @@ export default function YourClassesView() {
                               e.stopPropagation(); // Prevent card expansion trigger
                               handleGoToNextClass();
                             }}
-                            className="inline-flex bg-gradient-to-r from-emerald-500 to-green-500 text-white font-medium py-2.5 px-5 rounded-full items-center justify-center gap-2 transition-all shadow-sm text-sm hover:shadow-lg duration-300"
+                            className="inline-flex bg-gradient-to-r from-emerald-500 to-green-500 text-white font-medium py-2 sm:py-2.5 px-4 sm:px-5 rounded-full items-center justify-center gap-2 transition-all shadow-sm text-xs sm:text-sm hover:shadow-lg duration-300"
                           >
                             Go to next planned class
-                            <ArrowRight size={16} />
+                            <ArrowRight size={14} className="sm:hidden" />
+                            <ArrowRight size={16} className="hidden sm:inline" />
                           </button>
                         )}
                       </div>
                     )}
                     
                     {hasMultipleSubjects && isCenter && !isExpanded && (
-                      <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+                      <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 flex justify-center">
                         <div className="flex flex-col items-center">
                           <div className="text-xs text-gray-500 mb-1">More subjects</div>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </div>
@@ -295,6 +311,34 @@ export default function YourClassesView() {
               })}
             </div>
           </AnimatePresence>
+          
+          {/* Mobile navigation buttons */}
+          <div className="md:hidden flex justify-between items-center mt-4 px-2">
+            <button 
+              onClick={handlePrevious}
+              className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <button 
+              onClick={handleJumpToToday}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium py-1.5 px-3 rounded-full"
+            >
+              Today
+            </button>
+            
+            <button 
+              onClick={handleNext}
+              className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ViewPill from '../../components/plan/ViewPill';
 import YourClassesView from '../../components/plan/YourClassesView';
@@ -69,9 +69,28 @@ const subjectsData = [
 export default function PlanPage() {
   const views = ["Your Classes", "Calendar", "Subjects", "Progress"];
   const [currentView, setCurrentView] = useState(views[0]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile when component mounts and on window resize
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
 
   return (
-    <div className="w-full min-h-[90vh] flex flex-col">
+    <div className="w-full min-h-[90vh] flex flex-col px-2 sm:px-4">
       <ViewPill
         currentView={currentView}
         views={views}

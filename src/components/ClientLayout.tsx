@@ -22,7 +22,9 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         ) : (
           <div className="flex">
             <Sidebar />
-            <main className="flex-1 ml-12 p-6 max-w-[calc(100vw-3rem)] overflow-x-hidden">{children}</main>
+            <main className="flex-1 md:ml-12 p-4 md:p-6 max-w-full md:max-w-[calc(100vw-3rem)] overflow-x-hidden">
+              {children}
+            </main>
           </div>
         )}
       </ProtectedRoute>
