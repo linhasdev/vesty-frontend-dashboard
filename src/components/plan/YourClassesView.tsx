@@ -400,14 +400,12 @@ export default function YourClassesView() {
                     {day.subjects.length > 0 ? (
                       <div 
                         className={`mt-4 sm:mt-6 pb-16 sm:pb-20 ${
-                          isExpanded ? 'overflow-y-auto scrollbar-hide pr-2' : 'overflow-y-auto scrollbar-hide pr-2'
+                          isExpanded ? 'overflow-y-auto scrollbar-hide pr-2' : 'overflow-y-visible pr-2'
                         }`}
                         style={{ 
                           maxHeight: isExpanded ? 
                             (typeof window !== 'undefined' && window.innerWidth < 768 ? 'calc(100vh - 200px)' : 'calc(100vh - 240px)') : 
-                            (typeof window !== 'undefined' && window.innerWidth < 768 ? '250px' : '300px'),
-                          maskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none',
-                          WebkitMaskImage: !isExpanded && hasMultipleSubjects && isCenter ? 'linear-gradient(to bottom, rgba(0,0,0,1) 90%, rgba(0,0,0,0))' : 'none'
+                            'none',
                         }}
                       >
                         <motion.div
