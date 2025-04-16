@@ -333,9 +333,12 @@ export default function YourClassesView() {
                       minWidth: isCenter ? 
                         (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '480px') : 
                         '340px',
-                      height: isCenter ? '650px' : '610px',
+                      height: isCenter ? '650px' : '580px',
+                      maxHeight: isCenter ? '650px' : '580px',
                       opacity: isCenter ? 1 : 0.6,
                       zIndex: isCenter ? 10 : 1,
+                      display: 'flex',
+                      flexDirection: 'column'
                     }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{
@@ -359,15 +362,17 @@ export default function YourClassesView() {
                         {day.displayName}
                       </h2>
                     </div>
-                    <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-4">
+                    <p className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2">
                       {day.dayName}, {day.date}
                     </p>
                     
                     {day.subjects.length > 0 ? (
                       <div 
-                        className="mt-4 sm:mt-6 pb-16 sm:pb-20 overflow-y-auto scrollbar-hide pr-2"
+                        className="mt-2 sm:mt-3 overflow-y-auto scrollbar-hide pr-2 flex-1"
                         style={{ 
-                          maxHeight: typeof window !== 'undefined' && window.innerWidth < 768 ? 'calc(100vh - 200px)' : 'calc(100vh - 240px)',
+                          height: '100%',
+                          WebkitOverflowScrolling: 'touch',
+                          overscrollBehavior: 'contain'
                         }}
                       >
                         <motion.div
@@ -383,6 +388,7 @@ export default function YourClassesView() {
                               }
                             }
                           }}
+                          className="pb-4"
                         >
                           {day.subjects.map((subject, i) => (
                             <motion.div 
@@ -405,10 +411,10 @@ export default function YourClassesView() {
                                 color={subject.color} 
                                 size={typeof window !== 'undefined' && window.innerWidth < 640 ? 'small' : 'normal'} 
                               />
-                              <div className="mt-1 sm:mt-2 space-y-1">
+                              <div className="mt-0 sm:mt-1 space-y-1">
                                 {/* Classes List - Group by sub-subject name */}
                                 {subject.classes && subject.classes.length > 0 ? (
-                                  <div className="mt-3 space-y-3">
+                                  <div className="mt-2 space-y-2">
                                     {/* Group classes by sub-subject name first */}
                                     {Object.entries(
                                       subject.classes.reduce((acc, cls) => {
@@ -523,6 +529,11 @@ export default function YourClassesView() {
                               </div>
                             </motion.div>
                           ))}
+                          
+                          {/* Small end indicator */}
+                          <div className="w-full flex justify-center mt-2 opacity-30">
+                            <div className="h-px w-10 bg-gray-300"></div>
+                          </div>
                         </motion.div>
                       </div>
                     ) : (
@@ -599,6 +610,18 @@ export default function YourClassesView() {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;  /* Chrome, Safari and Opera */
+        }
+        
+        /* Fix for ensuring scrollable content is fully accessible */
+        .overflow-y-auto {
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Ensure proper flex layout */
+        .flex-1 {
+          flex: 1 1 auto;
+          min-height: 0; /* Important for nested flex scrolling */
         }
       `}</style>
     </div>
