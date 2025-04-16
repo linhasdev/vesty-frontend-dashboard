@@ -319,7 +319,7 @@ export default function YourClassesView() {
   };
 
   return (
-    <div className="relative w-full pb-10 px-2 sm:px-4 mt-2">
+    <div className="relative w-full pb-2 sm:pb-10 px-2 sm:px-4 mt-2">
       <div className="flex justify-center items-center relative">
         <div className="max-w-6xl mx-auto w-full relative"
              onTouchStart={onTouchStart}
@@ -611,16 +611,6 @@ export default function YourClassesView() {
               })}
             </div>
           </AnimatePresence>
-          
-          {/* Mobile navigation buttons - only show Today button */}
-          <div className="md:hidden flex justify-center items-center mt-4 px-2">
-            <button 
-              onClick={handleJumpToToday}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium py-1.5 px-3 rounded-full"
-            >
-              Today
-            </button>
-          </div>
         </div>
       </div>
       
