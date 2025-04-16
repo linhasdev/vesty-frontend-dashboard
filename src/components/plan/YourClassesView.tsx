@@ -12,6 +12,38 @@ export default function YourClassesView() {
   const [animationDirection, setAnimationDirection] = useState(0); // -1 for left, 1 for right, 0 for initial
   const [initialRenderComplete, setInitialRenderComplete] = useState(false);
   const [forceExitLoading, setForceExitLoading] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  
+  // Required minimum distance traveled to be considered swipe
+  const minSwipeDistance = 50;
+  
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null); // Reset touchEnd
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      handleNext(); // Swipe left means navigate to next day
+    } else if (isRightSwipe) {
+      handlePrevious(); // Swipe right means navigate to previous day
+    }
+    
+    // Reset values
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
   
   // Force exit loading state after timeout
   useEffect(() => {
@@ -289,7 +321,10 @@ export default function YourClassesView() {
   return (
     <div className="relative w-full pb-10 px-2 sm:px-4 mt-2">
       <div className="flex justify-center items-center relative">
-        <div className="max-w-6xl mx-auto w-full relative">
+        <div className="max-w-6xl mx-auto w-full relative"
+             onTouchStart={onTouchStart}
+             onTouchMove={onTouchMove}
+             onTouchEnd={onTouchEnd}>
           {/* Day cards */}
           <AnimatePresence mode="wait" custom={animationDirection}>
             <div 
@@ -333,8 +368,12 @@ export default function YourClassesView() {
                       minWidth: isCenter ? 
                         (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '480px') : 
                         '340px',
-                      height: isCenter ? '650px' : '580px',
-                      maxHeight: isCenter ? '650px' : '580px',
+                      height: isCenter ? 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '550px' : '650px') : 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '520px' : '580px'),
+                      maxHeight: isCenter ? 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '550px' : '650px') : 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '520px' : '580px'),
                       opacity: isCenter ? 1 : 0.6,
                       zIndex: isCenter ? 10 : 1,
                       display: 'flex',
