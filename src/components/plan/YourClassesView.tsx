@@ -369,11 +369,11 @@ export default function YourClassesView() {
                         (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '480px') : 
                         '340px',
                       height: isCenter ? 
-                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '550px' : '650px') : 
-                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '520px' : '580px'),
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '480px' : '650px') : 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '450px' : '580px'),
                       maxHeight: isCenter ? 
-                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '550px' : '650px') : 
-                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '520px' : '580px'),
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '480px' : '650px') : 
+                        (typeof window !== 'undefined' && window.innerWidth < 640 ? '450px' : '580px'),
                       opacity: isCenter ? 1 : 0.6,
                       zIndex: isCenter ? 10 : 1,
                       display: 'flex',
@@ -496,7 +496,8 @@ export default function YourClassesView() {
                                         key={`subsubject-${ssIndex}`}
                                         className="bg-white/50 p-2 rounded-md"
                                       >
-                                        <h4 className="text-xs font-medium text-gray-700 mb-2 pl-1 border-l-2 border-gray-300">
+                                        <h4 className="text-xs font-medium text-gray-700 mb-2 pl-1 border-l-2" 
+                                            style={{ borderColor: subject.color }}>
                                           {subSubjectName}
                                         </h4>
                                         <div className="space-y-2">
@@ -611,31 +612,13 @@ export default function YourClassesView() {
             </div>
           </AnimatePresence>
           
-          {/* Mobile navigation buttons */}
-          <div className="md:hidden flex justify-between items-center mt-4 px-2">
-            <button 
-              onClick={handlePrevious}
-              className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
+          {/* Mobile navigation buttons - only show Today button */}
+          <div className="md:hidden flex justify-center items-center mt-4 px-2">
             <button 
               onClick={handleJumpToToday}
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium py-1.5 px-3 rounded-full"
             >
               Today
-            </button>
-            
-            <button 
-              onClick={handleNext}
-              className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
             </button>
           </div>
         </div>
