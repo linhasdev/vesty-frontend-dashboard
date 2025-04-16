@@ -3,16 +3,13 @@
 import { useState, useRef, useEffect } from 'react';
 import SubjectPill from './SubjectPill';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useClassSchedule } from '../../lib/hooks/useClassSchedule';
-import { CalendarClock, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
-import { MinusIcon, PlusIcon } from 'lucide-react';
+import { useClassSchedule, ClassInfo } from '../../lib/hooks/useClassSchedule';
+import { CalendarClock, ArrowRight } from 'lucide-react';
 
 export default function YourClassesView() {
   const { classDays, loading, error, currentDate, navigateRelative } = useClassSchedule();
   const [currentIndex, setCurrentIndex] = useState<number | null>(null); // Start with null instead of 15
-  const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [animationDirection, setAnimationDirection] = useState(0); // -1 for left, 1 for right, 0 for initial
-  const expandedCardRef = useRef<HTMLDivElement>(null);
   const [initialRenderComplete, setInitialRenderComplete] = useState(false);
   const [forceExitLoading, setForceExitLoading] = useState(false);
   
@@ -232,7 +229,6 @@ export default function YourClassesView() {
     }
     
     setAnimationDirection(-1);
-    setExpandedCard(null);
     setCurrentIndex(prev => prev !== null ? Math.max(0, prev - 1) : 0);
   };
   
@@ -244,7 +240,6 @@ export default function YourClassesView() {
     }
     
     setAnimationDirection(1);
-    setExpandedCard(null);
     setCurrentIndex(prev => prev !== null ? Math.min(classDays.length - 1, prev + 1) : 0);
   };
   
@@ -253,28 +248,11 @@ export default function YourClassesView() {
     const todayIndex = classDays.findIndex(day => day.displayName === 'Today');
     if (todayIndex !== -1) {
       setAnimationDirection(currentIndex !== null && currentIndex > todayIndex ? -1 : 1);
-      setExpandedCard(null);
       setCurrentIndex(todayIndex);
     } else {
       // If "Today" is not in the current range, reset to today
       navigateRelative(0);
     }
-  };
-
-  const toggleCardExpansion = (index: number) => {
-    setExpandedCard(expandedCard === index ? null : index);
-  };
-
-  // Calculate dynamic card height based on content
-  const getCardHeight = (subjects: any[], isCenter: boolean) => {
-    // Count total classes across all subjects
-    const totalClasses = subjects.reduce((count, subject) => 
-      count + (subject.classes?.length || 0), 0);
-    
-    if (subjects.length === 0) return isCenter ? '400px' : '360px'; // Empty state
-    if (subjects.length <= 2 && totalClasses <= 4) return isCenter ? '460px' : '420px'; // Few subjects with few classes
-    if (subjects.length <= 4 && totalClasses <= 8) return isCenter ? '520px' : '480px'; // Medium subjects with medium classes
-    return isCenter ? '600px' : '560px'; // Many subjects or many classes
   };
 
   // Add a new function to find the next day with classes
@@ -304,7 +282,6 @@ export default function YourClassesView() {
     const nextClassIndex = findNextDayWithClasses();
     if (nextClassIndex !== null) {
       setAnimationDirection(1); // Always animate forward
-      setExpandedCard(null);
       setCurrentIndex(nextClassIndex);
     }
   };
@@ -321,9 +298,6 @@ export default function YourClassesView() {
             >
               {visibleDays.map((day, index) => {
                 const isCenter = index === 1;
-                const hasMultipleSubjects = day.subjects.length > 3;
-                const isExpanded = expandedCard === index;
-                const dynamicHeight = getCardHeight(day.subjects, isCenter);
                 const isToday = day.displayName === 'Today';
                 
                 // Debug the day data to ensure correct display
@@ -344,14 +318,11 @@ export default function YourClassesView() {
                     key={`${day.displayName}-${day.actualDate}-${index}`}
                     className={`relative rounded-xl p-3 sm:p-6 
                       ${isCenter ? 'bg-[#f0f0f0]' : 'bg-[#f8f8f8]'} 
-                      ${isCenter && hasMultipleSubjects ? (isExpanded ? 'cursor-auto' : 'cursor-pointer') : 'cursor-pointer'} 
+                      ${!isCenter ? 'cursor-pointer' : ''} 
                       overflow-hidden
                       ${isToday ? 'ring-2 ring-emerald-500' : ''}`}
-                    ref={isExpanded ? expandedCardRef : null}
                     onClick={() => {
-                      if (isCenter && hasMultipleSubjects) {
-                        toggleCardExpansion(index);
-                      } else if (!isCenter) {
+                      if (!isCenter) {
                         index === 0 ? handlePrevious() : handleNext();
                       }
                     }}
@@ -362,12 +333,7 @@ export default function YourClassesView() {
                       minWidth: isCenter ? 
                         (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '480px') : 
                         '340px',
-                      height: isExpanded ? 'auto' : (
-                        typeof window !== 'undefined' && window.innerWidth < 640 
-                          ? (day.subjects.length === 0 ? '300px' : day.subjects.length <= 2 ? '350px' : '400px')
-                          : dynamicHeight
-                      ),
-                      maxHeight: isExpanded ? '80vh' : undefined,
+                      height: isCenter ? '650px' : '610px',
                       opacity: isCenter ? 1 : 0.6,
                       zIndex: isCenter ? 10 : 1,
                     }}
@@ -399,13 +365,9 @@ export default function YourClassesView() {
                     
                     {day.subjects.length > 0 ? (
                       <div 
-                        className={`mt-4 sm:mt-6 pb-16 sm:pb-20 ${
-                          isExpanded ? 'overflow-y-auto scrollbar-hide pr-2' : 'overflow-y-visible pr-2'
-                        }`}
+                        className="mt-4 sm:mt-6 pb-16 sm:pb-20 overflow-y-auto scrollbar-hide pr-2"
                         style={{ 
-                          maxHeight: isExpanded ? 
-                            (typeof window !== 'undefined' && window.innerWidth < 768 ? 'calc(100vh - 200px)' : 'calc(100vh - 240px)') : 
-                            'none',
+                          maxHeight: typeof window !== 'undefined' && window.innerWidth < 768 ? 'calc(100vh - 200px)' : 'calc(100vh - 240px)',
                         }}
                       >
                         <motion.div
@@ -450,14 +412,41 @@ export default function YourClassesView() {
                                     {/* Group classes by sub-subject name first */}
                                     {Object.entries(
                                       subject.classes.reduce((acc, cls) => {
+                                        // Debug subjectId values to identify issues
+                                        if (subject.name === 'História' || subject.name === 'Historia') {
+                                          console.log(`História sub-subject: ${cls.subSubjectName}, id: ${cls.subSubjectId}, type: ${typeof cls.subSubjectId}`);
+                                        }
+                                        
                                         // Create group by subSubjectName
                                         if (!acc[cls.subSubjectName]) {
-                                          acc[cls.subSubjectName] = [];
+                                          acc[cls.subSubjectName] = {
+                                            id: cls.subSubjectId, // Store the subSubjectId for sorting
+                                            classes: []
+                                          };
+                                        } else if (acc[cls.subSubjectName].id === undefined && cls.subSubjectId !== undefined) {
+                                          // Update ID if it was undefined before but is defined now
+                                          acc[cls.subSubjectName].id = cls.subSubjectId;
                                         }
-                                        acc[cls.subSubjectName].push(cls);
+                                        acc[cls.subSubjectName].classes.push(cls);
                                         return acc;
-                                      }, {} as Record<string, typeof subject.classes>)
-                                    ).map(([subSubjectName, classes], ssIndex) => (
+                                      }, {} as Record<string, { id: number, classes: ClassInfo[] }>)
+                                    )
+                                    // Sort sub-subjects by their ID (lower number first)
+                                    .sort((a, b) => {
+                                      // Ensure the IDs are numbers before comparison
+                                      const aId = typeof a[1].id === 'number' ? a[1].id : 
+                                                 (a[1].id === undefined ? 9999 : parseInt(String(a[1].id)) || 9999);
+                                      const bId = typeof b[1].id === 'number' ? b[1].id : 
+                                                 (b[1].id === undefined ? 9999 : parseInt(String(b[1].id)) || 9999);
+                                                 
+                                      // Debug for História subject
+                                      if ((a[0].includes('Histór') || b[0].includes('Histór')) && subject.name.includes('Histór')) {
+                                        console.log(`Comparing: ${a[0]} (${aId}) vs ${b[0]} (${bId})`);
+                                      }
+                                      
+                                      return aId - bId;
+                                    })
+                                    .map(([subSubjectName, { classes }], ssIndex) => (
                                       <div 
                                         key={`subsubject-${ssIndex}`}
                                         className="bg-white/50 p-2 rounded-md"
@@ -466,7 +455,13 @@ export default function YourClassesView() {
                                           {subSubjectName}
                                         </h4>
                                         <div className="space-y-2">
-                                          {classes.map((cls, clsIndex) => (
+                                          {/* Sort classes by order before rendering */}
+                                          {[...classes].sort((a, b) => {
+                                            // Ensure we're comparing numbers
+                                            const aOrder = typeof a.order === 'number' ? a.order : parseInt(String(a.order)) || 0;
+                                            const bOrder = typeof b.order === 'number' ? b.order : parseInt(String(b.order)) || 0;
+                                            return aOrder - bOrder;
+                                          }).map((cls, clsIndex) => (
                                             <motion.div
                                               key={`class-${cls.id}-${clsIndex}`}
                                               className="bg-white border border-gray-200 rounded-md px-3 py-2 hover:bg-gray-50 transition-colors"
@@ -553,51 +548,12 @@ export default function YourClassesView() {
                       </div>
                     )}
                     
-                    {/* Expand/collapse button for cards with multiple subjects */}
-                    {hasMultipleSubjects && isCenter && (
-                      <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 flex justify-center">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpandedCard(isExpanded ? null : index);
-                          }}
-                          className="flex items-center gap-1.5 backdrop-blur-sm bg-white/80 px-3 py-1.5 rounded-full shadow-sm transition-all hover:shadow-md text-xs"
-                        >
-                          <span>{isExpanded ? "Collapse" : "Expand"}</span>
-                          {isExpanded ? 
-                            <ChevronUp className="h-3.5 w-3.5 text-gray-500" /> : 
-                            <ChevronDown className="h-3.5 w-3.5 text-gray-500" />
-                          }
-                        </button>
-                      </div>
-                    )}
-                    
                     {!isCenter && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 hover:opacity-100 transition-opacity">
                         <div className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm text-gray-700 font-medium">
                           {index === 0 ? 'Previous Day' : 'Next Day'}
                         </div>
                       </div>
-                    )}
-
-                    {day.subjects.length > 0 && isCenter && (
-                      <button
-                        className={`absolute transition-all duration-300 w-8 h-8 rounded-full text-white flex items-center justify-center z-20 ${
-                          isExpanded ? 
-                            'bottom-4 right-4 bg-rose-500 hover:bg-rose-600' : 
-                            'top-4 right-4 bg-slate-600 hover:bg-slate-700'
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedCard(isExpanded ? null : index);
-                        }}
-                      >
-                        {isExpanded ? (
-                          <MinusIcon className="w-5 h-5" />
-                        ) : (
-                          <PlusIcon className="w-5 h-5" />
-                        )}
-                      </button>
                     )}
                   </motion.div>
                 );
