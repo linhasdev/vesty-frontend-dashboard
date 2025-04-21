@@ -1,6 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
+import TodayClassesWidget from "@/components/widgets/TodayClassesWidget";
+import Link from "next/link";
 
 export default function Home() {
   // Animation variants
@@ -68,18 +70,12 @@ export default function Home() {
         className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[35%] mx-2"
         variants={containerVariants}
       >
-        {/* Your Classes Card */}
+        {/* Today's Classes Card */}
         <motion.div 
-          className="bg-gradient-to-br from-accent-green-light to-accent-green rounded-card overflow-hidden cursor-pointer hover:shadow-lg transition-shadow h-full"
           variants={smallCardVariants}
+          className="h-full"
         >
-          <div className="relative h-full">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25 z-10"></div>
-            <div className="absolute bottom-0 left-0 p-4 z-20 text-white">
-              <h2 className="text-xl font-medium mb-1">Your Classes</h2>
-              <p className="text-sm">View all your enrolled classes</p>
-            </div>
-          </div>
+          <TodayClassesWidget />
         </motion.div>
 
         {/* Subjects Card */}
@@ -87,13 +83,15 @@ export default function Home() {
           className="bg-gradient-to-br from-accent-green to-accent-green-dark rounded-card overflow-hidden cursor-pointer hover:shadow-lg transition-shadow h-full"
           variants={smallCardVariants}
         >
-          <div className="relative h-full">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25 z-10"></div>
-            <div className="absolute bottom-0 left-0 p-4 z-20 text-white">
-              <h2 className="text-xl font-medium mb-1">Subjects</h2>
-              <p className="text-sm">Explore subjects and materials</p>
+          <Link href="/subjects" className="block h-full">
+            <div className="relative h-full">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25 z-10"></div>
+              <div className="absolute bottom-0 left-0 p-4 z-20 text-white">
+                <h2 className="text-xl font-medium mb-1">Subjects</h2>
+                <p className="text-sm">Explore subjects and materials</p>
+              </div>
             </div>
-          </div>
+          </Link>
         </motion.div>
 
         {/* Progress Card */}
@@ -101,13 +99,15 @@ export default function Home() {
           className="bg-gradient-to-br from-accent-green-light to-accent-green rounded-card overflow-hidden cursor-pointer hover:shadow-lg transition-shadow h-full"
           variants={smallCardVariants}
         >
-          <div className="relative h-full">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25 z-10"></div>
-            <div className="absolute bottom-0 left-0 p-4 z-20 text-white">
-              <h2 className="text-xl font-medium mb-1">Progress</h2>
-              <p className="text-sm">Track your learning progress</p>
+          <Link href="/progress" className="block h-full">
+            <div className="relative h-full">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25 z-10"></div>
+              <div className="absolute bottom-0 left-0 p-4 z-20 text-white">
+                <h2 className="text-xl font-medium mb-1">Progress</h2>
+                <p className="text-sm">Track your learning progress</p>
+              </div>
             </div>
-          </div>
+          </Link>
         </motion.div>
       </motion.div>
     </motion.div>
