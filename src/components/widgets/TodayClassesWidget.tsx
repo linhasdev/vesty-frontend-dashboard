@@ -250,7 +250,7 @@ export default function TodayClassesWidget() {
       opacity: 0,
       y: -5
     },
-    expanded: (i) => ({ 
+    expanded: (i: number) => ({ 
       opacity: 1,
       y: 0,
       transition: {
