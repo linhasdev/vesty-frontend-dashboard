@@ -43,7 +43,7 @@ export default function Home() {
 
   return (
     <div className="absolute inset-0" style={{
-      backgroundImage: "url('https://storage.googleapis.com/test2324234242/ChatGPT%20Image%20Apr%2021%2C%202025%2C%2010_02_01%20PM.png')",
+      backgroundImage: "url('https://storage.googleapis.com/test2324234242/ChatGPT%20Image%20Apr%2021%2C%202025%2C%2011_55_35%20PM.png')",
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       overflow: 'hidden'
