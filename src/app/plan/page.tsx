@@ -192,6 +192,35 @@ export default function PlanPage() {
   const [currentView, setCurrentView] = useState(views[0]);
   const [isMobile, setIsMobile] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
+
+  // Preload background image
+  useEffect(() => {
+    const bgImage = new Image();
+    bgImage.src = "https://storage.googleapis.com/test2324234242/ChatGPT_Image_Apr_21_2025_11_55_35_PM_1.png";
+    bgImage.onload = () => {
+      setImageLoaded(true);
+    };
+    
+    // Set a fallback timer in case image load fails
+    const timer = setTimeout(() => {
+      if (!imageLoaded) setImageLoaded(true);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Set page ready after a short delay once image is loaded
+  useEffect(() => {
+    if (imageLoaded) {
+      const timer = setTimeout(() => {
+        setPageReady(true);
+      }, 100); // Small delay to ensure smooth transition
+      
+      return () => clearTimeout(timer);
+    }
+  }, [imageLoaded]);
 
   // Check if we're on mobile when component mounts and on window resize
   useEffect(() => {
@@ -250,69 +279,126 @@ export default function PlanPage() {
     }
   };
 
+  // Animation variants
+  const fadeInVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { duration: 0.6 }
+    }
+  };
+
   return (
-    <div className="w-full min-h-[90vh] flex flex-col px-2 sm:px-4">
-      <ViewPill
-        currentView={currentView}
-        views={views}
-        onChangeView={handleViewChange}
-      />
-      
-      <div className="flex-1 relative">
-        <AnimatePresence mode="wait" initial={false}>
-          {currentView === "Your Classes" && (
-            <motion.div
-              key="your-classes"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="absolute inset-0"
-            >
-              <YourClassesView />
-            </motion.div>
-          )}
+    <>
+      {/* Image preloader overlay */}
+      <AnimatePresence>
+        {!pageReady && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5 } }}
+            className="fixed inset-0 bg-[#F6F8FB] z-50 flex items-center justify-center"
+          >
+            <div className="w-16 h-16 border-t-4 border-b-4 border-[#10B981] rounded-full animate-spin"></div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div 
+        className="absolute inset-0" 
+        style={{
+          backgroundImage: `url('https://storage.googleapis.com/test2324234242/ChatGPT_Image_Apr_21_2025_11_55_35_PM_1.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          overflow: 'hidden'
+        }}
+        initial="hidden"
+        animate={pageReady ? "visible" : "hidden"}
+        variants={fadeInVariants}
+      >
+        {/* White overlay to ensure readability */}
+        <div className="absolute inset-0 bg-white/30 z-0"></div>
+        
+        <style jsx global>{`
+          :root {
+            --bg-gradient-from: #F6F8FB;
+            --bg-gradient-to: #E4F1FF;
+            --surface-glass: rgba(255,255,255,0.36);
+            --surface-inner: rgba(255,255,255,0.28);
+            --surface-stroke: rgba(255,255,255,0.35);
+            --hairline: rgba(60,60,67,0.23);
+            --accent-color: #10B981;
+            --accent-blue: #3182CE;
+            --accent-success: #30D158;
+            --text-primary: #1C1C1E;
+            --text-secondary: rgba(60,60,67,0.6);
+          }
+        `}</style>
+
+        {/* Main content */}
+        <div className="w-full min-h-screen relative z-10 flex flex-col px-2 sm:px-4">
+          <ViewPill
+            currentView={currentView}
+            views={views}
+            onChangeView={handleViewChange}
+          />
           
-          {currentView === "Calendar" && (
-            <motion.div
-              key="calendar"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="absolute inset-0"
-            >
-              <CalendarView />
-            </motion.div>
-          )}
-          
-          {currentView === "Subjects" && (
-            <motion.div
-              key="subjects"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="absolute inset-0"
-            >
-              <SubjectsView />
-            </motion.div>
-          )}
-          
-          {currentView === "Progress" && (
-            <motion.div
-              key="progress"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="absolute inset-0"
-            >
-              <ProgressView />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+          <div className="flex-1 relative">
+            <AnimatePresence mode="wait" initial={false}>
+              {currentView === "Your Classes" && (
+                <motion.div
+                  key="your-classes"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0"
+                >
+                  <YourClassesView />
+                </motion.div>
+              )}
+              
+              {currentView === "Calendar" && (
+                <motion.div
+                  key="calendar"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0"
+                >
+                  <CalendarView />
+                </motion.div>
+              )}
+              
+              {currentView === "Subjects" && (
+                <motion.div
+                  key="subjects"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0"
+                >
+                  <SubjectsView />
+                </motion.div>
+              )}
+              
+              {currentView === "Progress" && (
+                <motion.div
+                  key="progress"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="absolute inset-0"
+                >
+                  <ProgressView />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 } 

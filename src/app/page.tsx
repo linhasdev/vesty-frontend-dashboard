@@ -12,7 +12,7 @@ export default function Home() {
   // Preload background image
   useEffect(() => {
     const bgImage = new Image();
-    bgImage.src = "https://storage.googleapis.com/test2324234242/ChatGPT%20Image%20Apr%2021%2C%202025%2C%2010_02_01%20PM.png";
+    bgImage.src = "https://storage.googleapis.com/test2324234242/ChatGPT_Image_Apr_21_2025_11_55_35_PM_1.png";
     bgImage.onload = () => {
       setImageLoaded(true);
     };
@@ -98,7 +98,7 @@ export default function Home() {
       <motion.div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `url('https://storage.googleapis.com/test2324234242/ChatGPT%20Image%20Apr%2021%2C%202025%2C%2010_02_01%20PM.png')`,
+          backgroundImage: `url('https://storage.googleapis.com/test2324234242/ChatGPT_Image_Apr_21_2025_11_55_35_PM_1.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           overflow: 'hidden'

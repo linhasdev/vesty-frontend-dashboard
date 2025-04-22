@@ -519,23 +519,23 @@ export default function SubjectsView() {
   );
 
   const SubjectNavigation = () => (
-    <div className="bg-[#f0f0f0] rounded-full p-1 flex items-center justify-center max-w-[280px] mx-auto mb-8">
+    <div className="bg-white/50 backdrop-blur-sm rounded-full p-1 flex items-center justify-center max-w-[280px] mx-auto mb-8 border border-white/10">
       <button
         onClick={handlePrevSubject}
-        className="p-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors"
+        className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
       
       {selectedSubjectData && (
-        <div className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 text-center">
+        <div className="flex-1 px-4 py-2 text-sm font-medium text-[var(--text-primary)] text-center">
           {selectedSubjectData.name}
         </div>
       )}
       
       <button
         onClick={handleNextSubject}
-        className="p-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors"
+        className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
       >
         <ChevronRight className="w-5 h-5" />
       </button>
@@ -545,9 +545,14 @@ export default function SubjectsView() {
   const SubjectCard = ({ subject }: { subject: Subject }) => (
         <motion.div 
           key={subject.id}
-          className="bg-[#f0f0f0] rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
+          className="card hover:translate-y-[-3px] hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer
+                    will-change-transform will-change-opacity p-4 sm:p-6"
           variants={cardVariants}
-      onClick={() => setSelectedSubject(subject.id)}
+          onClick={() => setSelectedSubject(subject.id)}
+          style={{ 
+            willChange: 'opacity, transform', 
+            backfaceVisibility: 'hidden'
+          }}
         >
           <div className="flex items-center mb-3 sm:mb-4">
             <div
@@ -556,15 +561,15 @@ export default function SubjectsView() {
             >
               {subject.name.charAt(0)}
             </div>
-            <h3 className="text-lg sm:text-xl font-medium truncate">{subject.name}</h3>
+            <h3 className="text-lg sm:text-xl font-medium truncate text-black">{subject.name}</h3>
           </div>
           
           <div className="mb-3 sm:mb-4">
-            <div className="flex justify-between text-xs sm:text-sm mb-1">
+            <div className="flex justify-between text-xs sm:text-sm mb-1 text-black">
               <span>Progress</span>
               <span>{subject.progress}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
+            <div className="w-full bg-black/10 rounded-full h-1.5 sm:h-2">
               <div 
                 className="h-1.5 sm:h-2 rounded-full" 
                 style={{ 
@@ -575,7 +580,7 @@ export default function SubjectsView() {
             </div>
           </div>
           
-          <div className="text-xs sm:text-sm text-gray-600">
+          <div className="text-xs sm:text-sm text-black">
             <div className="flex justify-between mb-1">
               <span>Next class:</span>
               <span>{subject.nextClass}</span>
@@ -611,7 +616,10 @@ export default function SubjectsView() {
   };
 
   const expandedViewVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
+    hidden: { 
+      opacity: 0, 
+      scale: 0.95
+    },
     show: { 
       opacity: 1,
       scale: 1,
@@ -626,6 +634,18 @@ export default function SubjectsView() {
       transition: {
         duration: 0.2
       }
+    }
+  };
+
+  const overlayVariants = {
+    hidden: { opacity: 0 },
+    show: { 
+      opacity: 1,
+      transition: { duration: 0.3 }
+    },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.2 }
     }
   };
 
@@ -658,6 +678,23 @@ export default function SubjectsView() {
         duration: 0.3
       }
     }
+  };
+
+  // Smooth item animation variants
+  const itemExpandVariants = {
+    collapsed: { 
+      opacity: 0,
+      y: -5
+    },
+    expanded: (i: number) => ({ 
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.05,
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    })
   };
 
   if (loading) {
@@ -697,9 +734,29 @@ export default function SubjectsView() {
   );
 
   return (
-    <div className="relative w-full min-h-screen overflow-y-auto pb-40" style={{ height: '100%' }}>
+    <div className="w-full h-full overflow-y-auto">
       <GlobalStyle />
-      {/* <DebugInfo /> */}
+      
+      <style jsx global>{`
+        .card {
+          backdrop-filter: blur(24px) saturate(180%);
+          background: var(--surface-glass);
+          border: 1px solid var(--surface-stroke);
+          border-radius: 24px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          position: relative;
+        }
+        
+        .card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          box-shadow: inset 0 0 0 800px rgba(255,255,255,0.20);
+          pointer-events: none;
+        }
+      `}</style>
+      
       <div className="pb-40">
         <AnimatePresence mode="wait">
           {!selectedSubject ? (
@@ -721,12 +778,12 @@ export default function SubjectsView() {
                     "bio quim"
                     "fis auto"
                   `,
-                  gridGap: '2rem',
-                  paddingBottom: '15rem' // Increase bottom padding
+                  gridGap: '1rem',
+                  paddingBottom: '4rem' // Reduced bottom padding
                 }}
               >
                 {subjects.map(subject => (
-                  <div key={subject.id} style={{ gridArea: subject.gridArea || 'auto' }} className="mb-16">
+                  <div key={subject.id} style={{ gridArea: subject.gridArea || 'auto' }} className="mb-4">
                     <SubjectCard subject={subject} />
                   </div>
                 ))}
@@ -736,113 +793,125 @@ export default function SubjectsView() {
               <div className="h-64"></div>
             </motion.div>
           ) : (
-            <motion.div
-              key="expanded"
-              className="fixed inset-0 bg-gray-50/80 z-10 overflow-y-auto flex items-start justify-center pt-4 px-4 pb-20"
-              variants={expandedViewVariants}
-              initial="hidden"
-              animate="show"
-              exit="exit"
-              style={{ maxHeight: '100vh' }}
-            >
-              {selectedSubjectData && (
-                <div 
-                  ref={cardRef}
-                  className="w-full max-w-4xl bg-white rounded-3xl shadow-lg overflow-hidden mb-40"
-                >
-                  <div className="p-8">
-                    <SubjectNavigation />
+            <>
+              {/* Dark overlay - separate from content for better animation */}
+              <motion.div 
+                className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-10"
+                variants={overlayVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+              />
+              
+              {/* Container that follows the same structure as page.tsx */}
+              <div className="fixed inset-0 z-20 overflow-auto">
+                <div className="w-full min-h-full py-8 px-4 flex items-start justify-center">
+                  <motion.div
+                    key="expanded"
+                    variants={expandedViewVariants}
+                    initial="hidden"
+                    animate="show"
+                    exit="exit"
+                    className="w-full max-w-4xl mx-auto"
+                  >
+                    {selectedSubjectData && (
+                      <div 
+                        ref={cardRef}
+                        className="card w-full overflow-hidden mb-20"
+                      >
+                        <div className="p-8">
+                          <SubjectNavigation />
 
-                    <div className="mb-12">
-                      <div className="flex items-center justify-between mb-12">
-                        <div>
-                          <h1 className="text-6xl text-gray-800 font-medium mb-4">{selectedSubjectData.name}</h1>
-                          <h2 className="text-xl text-gray-600">Sua média:</h2>
-                        </div>
-                        <div className="flex flex-col items-end">
-                          <ProgressCircle progress={selectedSubjectData.progress} color={selectedSubjectData.color} />
-                          <div className="text-gray-500 mt-2">{selectedSubjectData.progress}% assistido</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-8">
-                      {selectedSubjectData.subSubjects.map((subSubject) => (
-                        <div 
-                          key={subSubject.id}
-                          className="bg-[#f0f0f0] rounded-3xl p-8"
-                        >
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-3xl text-gray-800 font-medium">
-                              {subSubject.name}
-                            </h3>
-                            <ProgressCircle 
-                              progress={70} 
-                              size="small"
-                              color={selectedSubjectData.color}
-                            />
+                          <div className="mb-12">
+                            <div className="flex items-center justify-between mb-12">
+                              <div>
+                                <h1 className="text-6xl text-[var(--text-primary)] font-medium mb-4">{selectedSubjectData.name}</h1>
+                                <h2 className="text-xl text-[var(--text-secondary)]">Sua média:</h2>
+                              </div>
+                              <div className="flex flex-col items-end">
+                                <ProgressCircle progress={selectedSubjectData.progress} color={selectedSubjectData.color} />
+                                <div className="text-[var(--text-secondary)] mt-2">{selectedSubjectData.progress}% assistido</div>
+                              </div>
+                            </div>
                           </div>
 
-                          <div className="space-y-3">
-                            {subSubject.classes.map((class_) => (
+                          <div className="space-y-8">
+                            {selectedSubjectData.subSubjects.map((subSubject) => (
                               <div 
-                                key={class_.id}
-                                className="overflow-hidden rounded-2xl"
+                                key={subSubject.id}
+                                className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/60 transition-all duration-300"
                               >
-                                <div 
-                                  className="flex items-center justify-between text-gray-600 bg-white/80 backdrop-blur-sm p-4 hover:bg-white transition-colors cursor-pointer"
-                                  onClick={() => toggleClass(class_.id)}
-                                >
-                                  <div className="flex items-center">
-                                    <ClassProgressCircle color={selectedSubjectData.color} />
-                                    <span className="text-lg">{class_.name}</span>
-                                  </div>
-                                  {expandedClasses.has(class_.id) ? (
-                                    <ChevronUp size={18} className="text-gray-500" />
-                                  ) : (
-                                    <ChevronDown size={18} className="text-gray-500" />
-                                  )}
+                                <div className="flex items-center justify-between mb-6">
+                                  <h3 className="text-3xl text-gray-800 font-medium">
+                                    {subSubject.name}
+                                  </h3>
+                                  <ProgressCircle 
+                                    progress={70} 
+                                    size="small"
+                                    color={selectedSubjectData.color}
+                                  />
                                 </div>
-                                
-                                <AnimatePresence>
-                                  {expandedClasses.has(class_.id) && (
-                                    <motion.div
-                                      initial="hidden"
-                                      animate="visible"
-                                      exit="hidden"
-                                      variants={dropdownVariants}
-                                      className="bg-white/50 backdrop-blur-sm border-t border-gray-100"
+
+                                <div className="space-y-3">
+                                  {subSubject.classes.map((class_) => (
+                                    <div 
+                                      key={class_.id}
+                                      className="overflow-hidden rounded-2xl"
                                     >
-                                      <div className="p-4 space-y-2">
-                                        <div className="flex items-center text-gray-600">
-                                          <Calendar size={16} className="mr-2" />
-                                          <span>{class_.date || class_.day || 'Schedule not set'}</span>
+                                      <div 
+                                        className="flex items-center justify-between text-[var(--text-primary)] bg-white/60 backdrop-blur-sm p-4 hover:bg-white/80 transition-colors cursor-pointer border border-white/10 rounded-t-lg"
+                                        onClick={() => toggleClass(class_.id)}
+                                      >
+                                        <div className="flex items-center">
+                                          <ClassProgressCircle color={selectedSubjectData.color} />
+                                          <span className="text-lg text-[var(--text-primary)]">{class_.name}</span>
                                         </div>
-                                        <div className="flex items-center text-gray-600">
-                                          <Clock size={16} className="mr-2" />
-                                          <span>
-                                            {class_.startTime && class_.finishTime 
-                                              ? `${class_.startTime} - ${class_.finishTime}`
-                                              : class_.time || 'Time not set'}
-                                          </span>
-                                        </div>
+                                        {expandedClasses.has(class_.id) ? (
+                                          <ChevronUp size={18} className="text-[var(--accent-blue)]" />
+                                        ) : (
+                                          <ChevronDown size={18} className="text-[var(--accent-blue)]" />
+                                        )}
                                       </div>
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
+                                      
+                                      <AnimatePresence>
+                                        {expandedClasses.has(class_.id) && (
+                                          <motion.div
+                                            initial="hidden"
+                                            animate="visible"
+                                            exit="hidden"
+                                            variants={dropdownVariants}
+                                            className="bg-white/50 backdrop-blur-sm border-t border-white/10"
+                                          >
+                                            <div className="p-4 space-y-2">
+                                              <div className="flex items-center text-[var(--text-secondary)]">
+                                                <Calendar size={16} className="mr-2" />
+                                                <span>{class_.date || class_.day || 'Schedule not set'}</span>
+                                              </div>
+                                              <div className="flex items-center text-[var(--text-secondary)]">
+                                                <Clock size={16} className="mr-2" />
+                                                <span>
+                                                  {class_.startTime && class_.finishTime 
+                                                    ? `${class_.startTime} - ${class_.finishTime}`
+                                                    : class_.time || 'Time not set'}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    {/* Add extra padding at the bottom for better scrolling */}
-                    <div className="h-40"></div>
-                  </div>
+                      </div>
+                    )}
+                  </motion.div>
                 </div>
-              )}
-    </motion.div>
+              </div>
+            </>
           )}
         </AnimatePresence>
       </div>
