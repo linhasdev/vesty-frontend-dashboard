@@ -18,7 +18,34 @@ const subjectsData = [
     progress: 65,
     nextClass: "Apr 15, 09:00",
     totalClasses: 30,
-    completedClasses: 20
+    completedClasses: 20,
+    subSubjects: [
+      {
+        id: "algebra-101",
+        name: "Algebra",
+        classes: [
+          { id: "alg-1", name: "Linear Equations", order: 1 },
+          { id: "alg-2", name: "Quadratic Equations", order: 2 },
+          { id: "alg-3", name: "Polynomials", order: 3 }
+        ]
+      },
+      {
+        id: "geometry-101",
+        name: "Geometry",
+        classes: [
+          { id: "geo-1", name: "Basic Shapes", order: 1 },
+          { id: "geo-2", name: "Triangles", order: 2 }
+        ]
+      },
+      {
+        id: "calculus-101",
+        name: "Calculus",
+        classes: [
+          { id: "calc-1", name: "Limits", order: 1 },
+          { id: "calc-2", name: "Derivatives", order: 2 }
+        ]
+      }
+    ]
   },
   {
     id: "phys-101",
@@ -27,7 +54,25 @@ const subjectsData = [
     progress: 45,
     nextClass: "Apr 18, 13:00",
     totalClasses: 25,
-    completedClasses: 11
+    completedClasses: 11,
+    subSubjects: [
+      {
+        id: "mechanics-101",
+        name: "Mechanics",
+        classes: [
+          { id: "mech-1", name: "Newton's Laws", order: 1 },
+          { id: "mech-2", name: "Forces", order: 2 }
+        ]
+      },
+      {
+        id: "thermo-101",
+        name: "Thermodynamics",
+        classes: [
+          { id: "therm-1", name: "Heat Transfer", order: 1 },
+          { id: "therm-2", name: "Laws of Thermodynamics", order: 2 }
+        ]
+      }
+    ]
   },
   {
     id: "chem-101",
@@ -36,7 +81,25 @@ const subjectsData = [
     progress: 78,
     nextClass: "Apr 14, 11:00",
     totalClasses: 28,
-    completedClasses: 22
+    completedClasses: 22,
+    subSubjects: [
+      {
+        id: "organic-101",
+        name: "Organic Chemistry",
+        classes: [
+          { id: "org-1", name: "Hydrocarbons", order: 1 },
+          { id: "org-2", name: "Functional Groups", order: 2 }
+        ]
+      },
+      {
+        id: "inorganic-101",
+        name: "Inorganic Chemistry",
+        classes: [
+          { id: "inorg-1", name: "Periodic Table", order: 1 },
+          { id: "inorg-2", name: "Chemical Bonding", order: 2 }
+        ]
+      }
+    ]
   },
   {
     id: "bio-101",
@@ -45,7 +108,25 @@ const subjectsData = [
     progress: 32,
     nextClass: "Apr 17, 10:00",
     totalClasses: 24,
-    completedClasses: 8
+    completedClasses: 8,
+    subSubjects: [
+      {
+        id: "cell-101",
+        name: "Cell Biology",
+        classes: [
+          { id: "cell-1", name: "Cell Structure", order: 1 },
+          { id: "cell-2", name: "Cell Division", order: 2 }
+        ]
+      },
+      {
+        id: "genetics-101",
+        name: "Genetics",
+        classes: [
+          { id: "gen-1", name: "DNA Structure", order: 1 },
+          { id: "gen-2", name: "Inheritance", order: 2 }
+        ]
+      }
+    ]
   },
   {
     id: "hist-101",
@@ -54,7 +135,25 @@ const subjectsData = [
     progress: 90,
     nextClass: "Apr 19, 14:00",
     totalClasses: 20,
-    completedClasses: 18
+    completedClasses: 18,
+    subSubjects: [
+      {
+        id: "ancient-101",
+        name: "Ancient History",
+        classes: [
+          { id: "anc-1", name: "Early Civilizations", order: 1 },
+          { id: "anc-2", name: "Ancient Egypt", order: 2 }
+        ]
+      },
+      {
+        id: "modern-101",
+        name: "Modern History",
+        classes: [
+          { id: "mod-1", name: "Industrial Revolution", order: 1 },
+          { id: "mod-2", name: "World Wars", order: 2 }
+        ]
+      }
+    ]
   },
   {
     id: "eng-101",
@@ -63,7 +162,25 @@ const subjectsData = [
     progress: 55,
     nextClass: "Apr 16, 13:00",
     totalClasses: 22,
-    completedClasses: 12
+    completedClasses: 12,
+    subSubjects: [
+      {
+        id: "grammar-101",
+        name: "Grammar",
+        classes: [
+          { id: "gram-1", name: "Parts of Speech", order: 1 },
+          { id: "gram-2", name: "Sentence Structure", order: 2 }
+        ]
+      },
+      {
+        id: "lit-101",
+        name: "Literature",
+        classes: [
+          { id: "lit-1", name: "Poetry Analysis", order: 1 },
+          { id: "lit-2", name: "Novel Study", order: 2 }
+        ]
+      }
+    ]
   }
 ];
 
@@ -178,7 +295,7 @@ export default function PlanPage() {
               transition={{ duration: 0.25 }}
               className="absolute inset-0"
             >
-              <SubjectsView subjects={subjectsData} />
+              <SubjectsView />
             </motion.div>
           )}
           
