@@ -13,6 +13,35 @@ export default function TodayClassesWidget() {
   const [expandedSubjects, setExpandedSubjects] = useState<number[]>([]);
   const [processedClasses, setProcessedClasses] = useState<Record<string, ClassInfo[]>>({});
   
+  // Color mapping for subjects
+  const subjectColors: Record<string, string> = {
+    'Matemática': '#4C51BF',      // Indigo
+    'Língua Portuguesa': '#38A169', // Green
+    'Biologia': '#805AD5',        // Purple
+    'Química': '#DD6B20',         // Orange
+    'Física': '#3182CE',          // Blue
+    'História': '#E53E3E',        // Red
+    'Geografia': '#319795',       // Teal
+    'default': '#718096'          // Gray (default)
+  };
+  
+  // Function to get color for a subject
+  const getSubjectColor = (subjectName: string): string => {
+    // Check if the subject name exists in our mapping or contains a key as substring
+    const exactMatch = subjectColors[subjectName];
+    if (exactMatch) return exactMatch;
+    
+    // Check for partial matches (e.g. if subject name contains "Matemática")
+    for (const [key, color] of Object.entries(subjectColors)) {
+      if (key !== 'default' && subjectName.includes(key)) {
+        return color;
+      }
+    }
+    
+    // Return default color if no match
+    return subjectColors.default;
+  };
+  
   // Toggle subject expansion
   const toggleExpand = (index: number, e: React.MouseEvent) => {
     e.preventDefault(); // Prevent link navigation
@@ -187,9 +216,10 @@ export default function TodayClassesWidget() {
     visible: { 
       opacity: 1,
       transition: { 
+        duration: 0.4,
+        ease: "easeOut",
         when: "beforeChildren",
-        staggerChildren: 0.1,
-        duration: 0.4
+        delayChildren: 0.1
       }
     }
   };
@@ -208,8 +238,10 @@ export default function TodayClassesWidget() {
     visible: { 
       opacity: 1,
       transition: { 
-        staggerChildren: 0.05,
-        delayChildren: 0.2
+        duration: 0.3,
+        ease: "easeOut",
+        delayChildren: 0.05,
+        staggerChildren: 0.05
       }
     }
   };
@@ -230,7 +262,7 @@ export default function TodayClassesWidget() {
           duration: 0.3,
           ease: [0.04, 0.62, 0.23, 0.98] // Custom easing for smooth animation
         },
-        opacity: { duration: 0.25, delay: 0.05 }
+        opacity: { duration: 0.2 }
       }
     },
     exit: {
@@ -239,7 +271,7 @@ export default function TodayClassesWidget() {
       overflow: 'hidden',
       transition: { 
         height: { duration: 0.2, ease: "easeInOut" },
-        opacity: { duration: 0.15 }
+        opacity: { duration: 0.1 }
       }
     }
   };
@@ -262,32 +294,32 @@ export default function TodayClassesWidget() {
   };
 
   return (
-    <Link href="/plan" className="block h-full">
+    <Link href="/plan" className="block h-full will-change-transform will-change-opacity">
       <motion.div 
-        className="bg-gradient-to-br from-accent-green-light to-accent-green rounded-card overflow-hidden h-full relative flex flex-col"
+        className="card h-full relative flex flex-col shadow-lg hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 ease-in-out"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
+        style={{ willChange: 'opacity, transform', backfaceVisibility: 'hidden' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/25 z-10"></div>
-        
         {/* Content container */}
-        <div className="relative h-full flex flex-col p-4 z-20">
+        <div className="relative h-full flex flex-col p-4 pl-6 z-20">
           {/* Top section with title and date */}
           <motion.div 
             className="flex justify-between items-start mb-3"
             variants={itemVariants}
+            style={{ willChange: 'opacity, transform' }}
           >
-            <div className="text-white">
-              <h2 className="text-2xl font-semibold mb-1">Suas Aulas</h2>
+            <div className="text-[var(--text-primary)]">
+              <h2 className="text-3xl font-semibold mb-0.5">Suas Aulas</h2>
               <div className="flex items-center gap-2">
-                <p className="text-sm text-white/90">
+                <p className="text-sm text-[var(--text-secondary)]">
                   {hasSubjects
                     ? `${todayData.dayName}, ${todayData.date}`
                     : "Veja seu cronograma"
                   }
                 </p>
-                <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">hoje</span>
+                <span className="bg-[#10B981] text-white text-xs px-2 py-0.5 rounded-full font-medium">hoje</span>
               </div>
             </div>
             
@@ -300,7 +332,7 @@ export default function TodayClassesWidget() {
                     cy="40" 
                     r="36" 
                     fill="none" 
-                    stroke="rgba(255,255,255,0.2)" 
+                    stroke="rgba(16,185,129,0.2)" 
                     strokeWidth="6"
                   />
                   {/* Progress circle - now always at 0% */}
@@ -309,7 +341,7 @@ export default function TodayClassesWidget() {
                     cy="40" 
                     r="36" 
                     fill="none" 
-                    stroke="#fff" 
+                    stroke="#10B981" 
                     strokeWidth="6" 
                     strokeDasharray={circumference}
                     strokeDashoffset={circumference} // Set to full circumference for 0%
@@ -318,7 +350,7 @@ export default function TodayClassesWidget() {
                   />
                 </svg>
                 {/* Percentage text */}
-                <div className="absolute inset-0 flex items-center justify-center text-white font-medium text-sm">
+                <div className="absolute inset-0 flex items-center justify-center text-[#10B981] font-medium text-sm">
                   0%
                 </div>
               </div>
@@ -347,6 +379,7 @@ export default function TodayClassesWidget() {
                 <motion.div 
                   className="space-y-2.5"
                   variants={listVariants}
+                  style={{ willChange: 'opacity' }}
                 >
                   {todayData.subjects.map((subject: ClassSchedule, i: number) => {
                     const subjectDuration = getSubjectDuration(subject);
@@ -357,12 +390,16 @@ export default function TodayClassesWidget() {
                       <motion.div 
                         key={i}
                         variants={itemVariants}
+                        style={{ willChange: 'opacity, transform', backfaceVisibility: 'hidden' }}
                         className={`
-                          bg-white/15 backdrop-blur-md 
-                          border border-white/20
-                          rounded-md shadow-sm hover:shadow-md
-                          transition-all duration-200 ease-in-out
-                          ${i === nextClassIndex ? 'border-l-2 border-white' : ''}
+                          backdrop-blur-sm
+                          border border-white/10
+                          bg-white/50
+                          rounded-lg
+                          transition-all duration-300 ease-in-out
+                          ${i === nextClassIndex ? 'border-l-2 border-l-[var(--accent-blue)]' : ''}
+                          hover:bg-white/60 hover:translate-y-[-3px] hover:shadow-lg
+                          cursor-pointer
                         `}
                         layout
                       >
@@ -370,44 +407,45 @@ export default function TodayClassesWidget() {
                         <div 
                           onClick={(e) => hasSubSubjects && toggleExpand(i, e)}
                           className={`
-                            flex items-center gap-2 px-2.5 py-2.5
-                            ${hasSubSubjects ? 'cursor-pointer hover:bg-white/5' : ''}
-                            ${isExpanded ? 'rounded-t-md' : 'rounded-md'}
+                            flex items-center gap-2 px-4 py-2.5
+                            ${hasSubSubjects ? 'cursor-pointer' : ''}
+                            ${isExpanded ? 'rounded-t-lg' : 'rounded-lg'}
                             transition-all duration-200
                           `}
                         >
                           <div 
                             className={`min-w-5 min-h-5 rounded-full flex items-center justify-center`}
+                            style={{ color: getSubjectColor(subject.name) }}
                           >
                             {isClassWatched(i) ? (
-                              <CheckCircle2 className="w-4 h-4 text-white" />
+                              <CheckCircle2 className="w-4 h-4 text-[var(--accent-success)]" />
                             ) : i === nextClassIndex ? (
-                              <ArrowRight className="w-4 h-4 text-white" />
+                              <ArrowRight className="w-4 h-4" />
                             ) : (
-                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getSubjectColor(subject.name) }}></div>
                             )}
                           </div>
                           
-                          <div className="flex-1 text-white">
+                          <div className="flex-1 text-[var(--text-primary)]">
                             <div className="flex justify-between items-center">
-                              <p className="text-sm font-medium truncate">
+                              <p className="text-base font-medium truncate">
                                 {subject.name}
                               </p>
-                              <span className="text-xs font-medium opacity-90 whitespace-nowrap">
+                              <span className="text-sm font-medium text-[var(--text-primary)] opacity-70 whitespace-nowrap">
                                 {getStartTime(subject)}
                               </span>
                             </div>
                             
                             <div className="flex justify-between items-center">
                               {subjectDuration > 0 && (
-                                <p className="text-[10px] opacity-70 flex items-center">
+                                <p className="text-xs text-[var(--text-primary)] opacity-70 flex items-center">
                                   <Clock className="w-3 h-3 inline mr-1" />
                                   {formatStudyTime(subjectDuration)}
                                 </p>
                               )}
                               
                               {hasSubSubjects && (
-                                <span className="text-[10px] opacity-70 flex items-center">
+                                <span className="text-xs text-[var(--text-primary)] opacity-70 flex items-center">
                                   <BookOpen className="w-3 h-3 inline mr-1" />
                                   {processedClasses[subject.id].length} {processedClasses[subject.id].length === 1 ? 'tópico' : 'tópicos'}
                                 </span>
@@ -418,11 +456,11 @@ export default function TodayClassesWidget() {
                           {hasSubSubjects && (
                             <motion.button 
                               onClick={(e) => toggleExpand(i, e)} 
-                              className="p-1 rounded-full hover:bg-white/10"
+                              className="p-1 rounded-full hover:bg-black/10"
                               animate={{ rotate: isExpanded ? 180 : 0 }}
                               transition={{ duration: 0.3, ease: "easeInOut" }}
                             >
-                              <ChevronDown size={16} className="text-white" />
+                              <ChevronDown size={16} className="text-[var(--accent-blue)]" />
                             </motion.button>
                           )}
                         </div>
@@ -436,7 +474,7 @@ export default function TodayClassesWidget() {
                               initial="collapsed"
                               animate="expanded"
                               exit="exit"
-                              className="bg-white/5"
+                              className="bg-transparent backdrop-blur-sm"
                             >
                               <div className="px-2.5 pb-2.5">
                                 <div className="space-y-1.5 mt-1 pl-7 border-l border-white/10">
@@ -450,20 +488,21 @@ export default function TodayClassesWidget() {
                                         variants={itemExpandVariants}
                                         initial="collapsed"
                                         animate="expanded"
-                                        className="py-1 text-white"
+                                        className="py-1 text-[var(--text-primary)] hover:bg-white/20 rounded transition-all duration-200 px-2 -ml-2"
+                                        onClick={(e) => e.preventDefault()} // Prevent navigation on click
                                       >
                                         <div className="flex items-start justify-between">
                                           <div className="flex items-start gap-2 flex-1">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-white/50 mt-1.5"></div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)] mt-1.5"></div>
                                             <div className="flex-1">
-                                              <p className="text-xs">{cls.subSubjectName || cls.name}</p>
+                                              <p className="text-sm">{cls.subSubjectName || cls.name}</p>
                                               
                                               {status && (
                                                 <span className={`
-                                                  text-[10px] rounded-full px-1.5 py-0.5 mt-1 inline-block
-                                                  ${status === 'Concluído' ? 'bg-white/10 text-white/60' :
-                                                    status === 'Em progresso' ? 'bg-white/20 text-white' :
-                                                    'bg-white/15 text-white/80'}
+                                                  text-xs rounded-full px-1.5 py-0.5 mt-1 inline-block
+                                                  ${status === 'Concluído' ? 'bg-[var(--accent-success)] bg-opacity-10 text-[var(--accent-success)]' :
+                                                    status === 'Em progresso' ? 'bg-[var(--accent-blue)] bg-opacity-10 text-[var(--accent-blue)]' :
+                                                    'bg-[var(--text-secondary)] bg-opacity-10 text-[var(--text-secondary)]'}
                                                 `}>
                                                   {status}
                                                 </span>
@@ -477,9 +516,9 @@ export default function TodayClassesWidget() {
                                               target="_blank" 
                                               rel="noopener noreferrer" 
                                               onClick={(e) => e.stopPropagation()}
-                                              className="p-1 rounded-full hover:bg-white/20 transition-colors"
+                                              className="p-2 rounded-full bg-white/15 border border-white/30 shadow-sm hover:shadow-md hover:bg-white/25 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center justify-center"
                                             >
-                                              <LinkIcon size={12} className="text-white" />
+                                              <LinkIcon size={15} className="text-[var(--accent-blue)]" />
                                             </a>
                                           )}
                                         </div>
@@ -498,11 +537,11 @@ export default function TodayClassesWidget() {
               </div>
             ) : !loading ? (
               <div className="flex items-center justify-center h-full">
-                <p className="text-xs text-white/80">Sem aulas hoje</p>
+                <p className="text-xs text-[var(--text-secondary)]">Sem aulas hoje</p>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <p className="text-xs text-white/80">Carregando...</p>
+                <p className="text-xs text-[var(--text-secondary)]">Carregando...</p>
               </div>
             )}
           </motion.div>
@@ -510,12 +549,12 @@ export default function TodayClassesWidget() {
           {/* Bottom info section with total study time */}
           <motion.div 
             variants={itemVariants}
-            className={`mt-2.5 bg-white/15 backdrop-blur-md border border-white/20 rounded-md px-3.5 py-2.5 text-white shadow-sm z-30 ${
+            className={`mt-2.5 bg-white/50 backdrop-blur-sm border-0 rounded-lg px-3.5 py-2.5 text-[var(--text-primary)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] z-30 relative overflow-hidden ${
               hasSubjects && totalStudyTime > 0 ? 'block' : 'hidden'
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs flex items-center">
+              <span className="text-xs flex items-center text-[var(--text-primary)] opacity-80">
                 <CalendarClock className="w-3 h-3 mr-1" />
                 Tempo total de estudo
               </span>

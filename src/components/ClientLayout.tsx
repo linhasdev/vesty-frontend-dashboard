@@ -77,22 +77,20 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
             
             {/* Main content */}
             <div className="flex-1 flex flex-col h-screen relative">
-              {/* Header with toggle button (completely transparent) */}
-              <header className="absolute top-0 left-0 right-0 h-16 flex items-center px-4 z-10">
-                <button 
-                  onClick={toggleSidebar}
-                  className="h-8 w-8 p-1 rounded-md flex items-center justify-center hover:bg-accent/10 transition-colors duration-200"
-                  aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-                >
-                  <PanelLeft 
-                    size={20} 
-                    className={`sidebar-transition ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`} 
-                  />
-                  <span className="sr-only">Toggle Sidebar</span>
-                </button>
-              </header>
+              {/* Floating toggle button without header */}
+              <button 
+                onClick={toggleSidebar}
+                className="absolute top-4 left-4 h-10 w-10 p-2 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 shadow-md hover:bg-white/30 transition-colors duration-200 z-50"
+                aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+              >
+                <PanelLeft 
+                  size={20} 
+                  className={`sidebar-transition text-white ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`} 
+                />
+                <span className="sr-only">Toggle Sidebar</span>
+              </button>
               
-              <main className="flex-1 pt-16 overflow-hidden">
+              <main className="flex-1 overflow-hidden">
                 {children}
               </main>
             </div>
