@@ -212,11 +212,16 @@ export default function TodayClassesWidget() {
   
   // Animation variants
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { 
+      opacity: 0,
+      transition: {
+        duration: 0.2
+      }
+    },
     visible: { 
       opacity: 1,
       transition: { 
-        duration: 0.4,
+        duration: 0.6,
         ease: "easeOut",
         when: "beforeChildren",
         delayChildren: 0.1
@@ -225,23 +230,28 @@ export default function TodayClassesWidget() {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
+    hidden: { 
+      opacity: 0,
+      y: 10,
+      transition: { duration: 0.1 }
+    },
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.3, ease: "easeOut" }
+      transition: { duration: 0.5, ease: "easeOut" }
     }
   };
 
   const listVariants = {
-    hidden: { opacity: 0 },
+    hidden: { 
+      opacity: 0
+    },
     visible: { 
       opacity: 1,
       transition: { 
-        duration: 0.3,
+        duration: 0.4,
         ease: "easeOut",
-        delayChildren: 0.05,
-        staggerChildren: 0.05
+        staggerChildren: 0.08
       }
     }
   };
@@ -260,9 +270,9 @@ export default function TodayClassesWidget() {
       transition: { 
         height: { 
           duration: 0.3,
-          ease: [0.04, 0.62, 0.23, 0.98] // Custom easing for smooth animation
+          ease: [0.04, 0.62, 0.23, 0.98]
         },
-        opacity: { duration: 0.2 }
+        opacity: { duration: 0.3 }
       }
     },
     exit: {
@@ -270,8 +280,8 @@ export default function TodayClassesWidget() {
       height: 0,
       overflow: 'hidden',
       transition: { 
-        height: { duration: 0.2, ease: "easeInOut" },
-        opacity: { duration: 0.1 }
+        height: { duration: 0.25, ease: "easeInOut" },
+        opacity: { duration: 0.2 }
       }
     }
   };
@@ -296,11 +306,16 @@ export default function TodayClassesWidget() {
   return (
     <Link href="/plan" className="block h-full will-change-transform will-change-opacity">
       <motion.div 
-        className="card h-full relative flex flex-col shadow-lg hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 ease-in-out"
+        className="card h-full relative flex flex-col shadow-lg hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 ease-in-out opacity-0"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        style={{ willChange: 'opacity, transform', backfaceVisibility: 'hidden' }}
+        style={{ 
+          willChange: 'opacity, transform', 
+          backfaceVisibility: 'hidden',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)'
+        }}
       >
         {/* Content container */}
         <div className="relative h-full flex flex-col p-4 pl-6 z-20">
@@ -390,9 +405,13 @@ export default function TodayClassesWidget() {
                       <motion.div 
                         key={i}
                         variants={itemVariants}
-                        style={{ willChange: 'opacity, transform', backfaceVisibility: 'hidden' }}
+                        style={{ 
+                          willChange: 'opacity, transform', 
+                          backfaceVisibility: 'hidden',
+                          backdropFilter: 'blur(12px)',
+                          WebkitBackdropFilter: 'blur(12px)'
+                        }}
                         className={`
-                          backdrop-blur-sm
                           border border-white/10
                           bg-white/50
                           rounded-lg
@@ -401,7 +420,7 @@ export default function TodayClassesWidget() {
                           hover:bg-white/60 hover:translate-y-[-3px] hover:shadow-lg
                           cursor-pointer
                         `}
-                        layout
+                        layout="position"
                       >
                         {/* Subject card content */}
                         <div 
