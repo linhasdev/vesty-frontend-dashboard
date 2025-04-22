@@ -428,8 +428,8 @@ export default function YourClassesView() {
                             }
                           }}
                           className="pb-4"
-                        >
-                          {day.subjects.map((subject, i) => (
+                      >
+                        {day.subjects.map((subject, i) => (
                             <motion.div 
                               key={i} 
                               className="mb-4 sm:mb-6"
@@ -554,14 +554,14 @@ export default function YourClassesView() {
                                                     />
                                                   </svg>
                                                 )}
-                                              </div>
+                                </div>
                                             </motion.div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
                                   <div className="mt-3 p-2 bg-gray-50 rounded">
                                     <p className="text-xs text-gray-500 italic">No class details available</p>
                                   </div>
