@@ -1,9 +1,50 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TodayClassesWidget from "@/components/widgets/TodayClassesWidget";
 import Link from "next/link";
+
+// Animation variants extracted outside the component (similar approach to YourClassesView & CalendarView)
+const fadeInVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.6 }
+  }
+} as const;
+
+// Container stagger (lighter – 0.1s like YourClassesView)
+const containerVariantsStatic = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+} as const;
+
+// Main card – simple slide + fade
+const mainCardVariantsStatic = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" }
+  }
+} as const;
+
+// Small cards – slightly faster animation
+const smallCardVariantsStatic = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: "easeOut" }
+  }
+} as const;
 
 export default function Home() {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -35,50 +76,6 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [imageLoaded]);
-
-  // Animation variants
-  const fadeInVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { duration: 0.6 }
-    }
-  };
-  
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15
-      }
-    }
-  };
-
-  const mainCardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const smallCardVariants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
 
   return (
     <>
@@ -145,14 +142,14 @@ export default function Home() {
         
         <motion.div 
           className="w-full max-w-full overflow-x-hidden h-[calc(100vh-2rem)] px-4 relative z-10 pt-8"
-          variants={containerVariants}
+          variants={containerVariantsStatic}
           initial="hidden"
           animate={pageReady ? "visible" : "hidden"}
         >
           {/* Main "Keep Watching" Card */}
           <motion.div 
             className="mb-4 h-[45%] mx-2 mt-8"
-            variants={mainCardVariants}
+            variants={mainCardVariantsStatic}
           >
             <div 
               className="card relative p-6 h-full w-full overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
@@ -168,11 +165,11 @@ export default function Home() {
           {/* Three cards side by side */}
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[45%] mx-2"
-            variants={containerVariants}
+            variants={containerVariantsStatic}
           >
             {/* Today's Classes Card */}
             <motion.div 
-              variants={smallCardVariants}
+              variants={smallCardVariantsStatic}
               className="h-full"
             >
               <TodayClassesWidget />
@@ -181,7 +178,7 @@ export default function Home() {
             {/* Subjects Card */}
             <motion.div 
               className="card overflow-hidden cursor-pointer hover:shadow-lg transition-shadow h-full"
-              variants={smallCardVariants}
+              variants={smallCardVariantsStatic}
             >
               <Link href="/subjects" className="block h-full">
                 <div className="relative h-full">
@@ -196,7 +193,7 @@ export default function Home() {
             {/* Progress Card */}
             <motion.div 
               className="card overflow-hidden cursor-pointer hover:shadow-lg transition-shadow h-full"
-              variants={smallCardVariants}
+              variants={smallCardVariantsStatic}
             >
               <Link href="/progress" className="block h-full">
                 <div className="relative h-full">
