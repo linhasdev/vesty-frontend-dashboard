@@ -607,8 +607,8 @@ export default function SubjectsView() {
   );
 
   const SubjectCard = ({ subject }: { subject: Subject }) => (
-    <div 
-      key={subject.id}
+        <div 
+          key={subject.id}
       className="card hover:translate-y-[-3px] hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer
                 will-change-transform will-change-opacity p-4 sm:p-6"
       onClick={() => setSelectedSubject(subject.id)}
@@ -620,38 +620,38 @@ export default function SubjectsView() {
       <div className="flex items-center mb-3 sm:mb-4">
         <div
           className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3 flex items-center justify-center text-white font-bold text-base sm:text-lg"
-          style={{ backgroundColor: subject.color }}
-        >
-          {subject.name.charAt(0)}
-        </div>
+              style={{ backgroundColor: subject.color }}
+            >
+              {subject.name.charAt(0)}
+            </div>
         <h3 className="text-lg sm:text-xl font-medium truncate text-black">{subject.name}</h3>
-      </div>
-      
+          </div>
+          
       <div className="mb-3 sm:mb-4">
         <div className="flex justify-between text-xs sm:text-sm mb-1 text-black">
-          <span>Progress</span>
-          <span>{subject.progress}%</span>
-        </div>
+              <span>Progress</span>
+              <span>{subject.progress}%</span>
+            </div>
         <div className="w-full bg-black/10 rounded-full h-1.5 sm:h-2">
-          <div 
+              <div 
             className="h-1.5 sm:h-2 rounded-full" 
-            style={{ 
-              width: `${subject.progress}%`,
-              backgroundColor: subject.color
-            }}
-          ></div>
-        </div>
-      </div>
-      
+                style={{ 
+                  width: `${subject.progress}%`,
+                  backgroundColor: subject.color
+                }}
+              ></div>
+            </div>
+          </div>
+          
       <div className="text-xs sm:text-sm text-black">
-        <div className="flex justify-between mb-1">
-          <span>Next class:</span>
-          <span>{subject.nextClass}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Classes:</span>
-          <span>{subject.completedClasses} of {subject.totalClasses}</span>
-        </div>
+            <div className="flex justify-between mb-1">
+              <span>Next class:</span>
+              <span>{subject.nextClass}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Classes:</span>
+              <span>{subject.completedClasses} of {subject.totalClasses}</span>
+            </div>
       </div>
     </div>
   );
@@ -862,9 +862,9 @@ export default function SubjectsView() {
                                   )}
                                 </div>
                               ))}
-                            </div>
-                          </div>
-                        ))}
+          </div>
+        </div>
+      ))}
                       </div>
                     </div>
                   </div>
