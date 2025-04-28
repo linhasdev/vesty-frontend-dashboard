@@ -744,7 +744,7 @@ export default function SubjectsView() {
             
             {/* Card container - dynamically centered based on sidebar state */}
             <div 
-              className="fixed inset-0 z-20 overflow-auto flex items-start justify-center py-8 px-4"
+              className="fixed inset-0 z-20 overflow-auto hide-scrollbar flex items-start justify-center py-8 px-4"
               onClick={handleOverlayClick}
               style={{
                 transition: "padding-left 0.2s ease-in-out"
@@ -762,7 +762,7 @@ export default function SubjectsView() {
                     ref={cardRef}
                     className="card w-full overflow-hidden mb-20"
                     style={{ 
-                      background: 'rgba(255, 255, 255, 0.5)',
+                      background: 'rgba(255, 255, 255, 0.75)',
                       backdropFilter: 'blur(24px) saturate(180%)'
                     }}
                     onClick={(e) => e.stopPropagation()}
