@@ -85,33 +85,13 @@ export default function TodayClassesWidget() {
       
       setProcessedClasses(classesMap);
       
-      // Find next class based on current time
-      if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 0) {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        
-        // Find the next class that hasn't started yet
-        const nextIdx = classDays[todayIndex].subjects.findIndex(subject => {
-          // Check if timeRanges exist and are not empty
-          if (!subject.timeRanges || subject.timeRanges.length === 0) return false;
-          
-          // Assume the first time range is the start time (format: "09:00 - 10:30")
-          const startTimePart = subject.timeRanges[0].split(' - ')[0]; 
-          const timeParts = startTimePart.split(':');
-          let hour = parseInt(timeParts[0]);
-          const minute = parseInt(timeParts[1]);
-          
-          // Return true if this class starts later than current time
-          return (hour > currentHour) || (hour === currentHour && minute > currentMinute);
-        });
-        
-        setNextClassIndex(nextIdx);
-        
-        // Automatically expand the next class
-        if (nextIdx !== -1) {
-          setExpandedSubjects([nextIdx]);
-        }
+      // Always set the next class to be the second subject if it exists
+      if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 1) {
+        setNextClassIndex(1); // Set to second subject
+        setExpandedSubjects([1]); // Auto-expand the next class
+      } else if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 0) {
+        // If there's only one subject, don't set a next class
+        setNextClassIndex(-1);
       }
     }
   }, [classDays]);
@@ -176,18 +156,17 @@ export default function TodayClassesWidget() {
   const getClassStatus = (subjectIndex: number, classIndex: number): string => {
     if (!todayData?.subjects) return '';
     
-    // For demo purposes, determine status based on indices
     if (subjectIndex < nextClassIndex) {
-      return 'Concluído'; // Completed
+      return classIndex === 0 ? 'Em progresso' : 'Concluído'; // First class in progress, others completed
     } else if (subjectIndex === nextClassIndex) {
       if (classIndex === 0) {
-        return 'Em progresso'; // In progress
+        return 'Próximo'; // Next up
       } else if (classIndex === 1) {
-        return 'Próximo'; // Next
+        return 'Próximo'; // Also next
       }
     }
     
-    return ''; // No status for future classes
+    return 'Não iniciado'; // Default to "Not started" instead of empty string
   };
   
   // Check if class is "watched" (completed) based on progress percentage
@@ -284,23 +263,6 @@ export default function TodayClassesWidget() {
         opacity: { duration: 0.2 }
       }
     }
-  };
-
-  // Smooth item animation variants
-  const itemExpandVariants = {
-    collapsed: { 
-      opacity: 0,
-      y: -5
-    },
-    expanded: (i: number) => ({ 
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.05,
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    })
   };
 
   return (
@@ -416,9 +378,9 @@ export default function TodayClassesWidget() {
                           bg-white/50
                           rounded-lg
                           transition-all duration-300 ease-in-out
-                          ${i === nextClassIndex ? 'border-l-2 border-l-[var(--accent-blue)]' : ''}
                           hover:bg-white/60 hover:translate-y-[-3px] hover:shadow-lg
                           cursor-pointer
+                          overflow-hidden
                         `}
                         layout="position"
                       >
@@ -436,12 +398,37 @@ export default function TodayClassesWidget() {
                             className={`min-w-5 min-h-5 rounded-full flex items-center justify-center`}
                             style={{ color: getSubjectColor(subject.name) }}
                           >
-                            {isClassWatched(i) ? (
-                              <CheckCircle2 className="w-4 h-4 text-[var(--accent-success)]" />
+                            {i === 0 ? (
+                              // Progress wheel for the first subject
+                              <div className="relative w-4 h-4">
+                                <svg className="w-full h-full transform -rotate-90">
+                                  <circle
+                                    className="text-gray-200"
+                                    strokeWidth={2}
+                                    stroke="currentColor"
+                                    fill="transparent"
+                                    r={7}
+                                    cx={8}
+                                    cy={8}
+                                  />
+                                  <circle
+                                    className="transition-all duration-300"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    stroke="#10B981"
+                                    fill="transparent"
+                                    r={7}
+                                    cx={8}
+                                    cy={8}
+                                    strokeDasharray={`${7 * 2 * Math.PI}`}
+                                    strokeDashoffset={`${7 * 2 * Math.PI * 0.7}`}
+                                  />
+                                </svg>
+                              </div>
                             ) : i === nextClassIndex ? (
-                              <ArrowRight className="w-4 h-4" />
+                              <ArrowRight className="w-4 h-4 text-[var(--accent-blue)]" />
                             ) : (
-                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getSubjectColor(subject.name) }}></div>
+                              <div className="w-2 h-2 rounded-full bg-[#10B981]"></div>
                             )}
                           </div>
                           
@@ -501,12 +488,8 @@ export default function TodayClassesWidget() {
                                     const status = getClassStatus(i, j);
                                     
                                     return (
-                                      <motion.div 
+                                      <div 
                                         key={cls.id || j}
-                                        custom={j}
-                                        variants={itemExpandVariants}
-                                        initial="collapsed"
-                                        animate="expanded"
                                         className="py-1 text-[var(--text-primary)] hover:bg-white/20 rounded transition-all duration-200 px-2 -ml-2"
                                         onClick={(e) => e.preventDefault()} // Prevent navigation on click
                                       >
@@ -519,11 +502,12 @@ export default function TodayClassesWidget() {
                                               {status && (
                                                 <span className={`
                                                   text-xs rounded-full px-1.5 py-0.5 mt-1 inline-block
-                                                  ${status === 'Concluído' ? 'bg-[var(--accent-success)] bg-opacity-10 text-[var(--accent-success)]' :
-                                                    status === 'Em progresso' ? 'bg-[var(--accent-blue)] bg-opacity-10 text-[var(--accent-blue)]' :
-                                                    'bg-[var(--text-secondary)] bg-opacity-10 text-[var(--text-secondary)]'}
+                                                  ${status === 'Concluído' ? 'bg-[var(--accent-success)] bg-opacity-20 text-[var(--accent-success)] font-medium' :
+                                                    status === 'Em progresso' ? 'bg-gray-200 bg-opacity-70 text-gray-600 font-medium' :
+                                                    status === 'Próximo' ? 'bg-blue-100 text-blue-600 font-medium' :
+                                                    'bg-gray-100 text-gray-500 font-medium'}
                                                 `}>
-                                                  {status}
+                                                  {status === '' ? 'Não iniciado' : status}
                                                 </span>
                                               )}
                                             </div>
@@ -541,7 +525,7 @@ export default function TodayClassesWidget() {
                                             </a>
                                           )}
                                         </div>
-                                      </motion.div>
+                                      </div>
                                     );
                                   })}
                                 </div>

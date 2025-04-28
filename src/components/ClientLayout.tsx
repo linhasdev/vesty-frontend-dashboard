@@ -85,7 +85,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
               >
                 <PanelLeft 
                   size={20} 
-                  className={`sidebar-transition text-white ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`} 
+                  className={`sidebar-transition text-black ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`} 
                 />
                 <span className="sr-only">Toggle Sidebar</span>
               </button>

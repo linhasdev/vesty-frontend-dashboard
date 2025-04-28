@@ -1,30 +1,144 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '../../lib/supabase/supabase';
 import { subjectColorMap } from '../../lib/hooks/useStudySessions';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
 import { useAuth } from '../../lib/hooks/useAuth';
 
-// Add global style to ensure scrolling works across viewport sizes
-const GlobalStyle = () => {
-  useEffect(() => {
-    // Add styles to ensure proper scrolling
-    document.documentElement.style.height = '100%';
-    document.body.style.height = '100%';
-    document.body.style.overflow = 'auto';
-    
-    return () => {
-      // Clean up when component unmounts
-      document.documentElement.style.height = '';
-      document.body.style.height = '';
-      document.body.style.overflow = '';
-    };
-  }, []);
-  
-  return null;
-};
+// Performance optimisations: memoize variants & static styles to avoid recreation on each render
+
+// Removed runtime DOM mutations that forced reflow – handled via CSS instead
+const GlobalStyle = () => null;
+
+// -------------------- Static animation variants --------------------
+// Extracted outside the component body so they are created once
+const containerVariantsStatic = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+} as const;
+
+const cardVariantsStatic = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut"
+    }
+  }
+} as const;
+
+const expandedViewVariantsStatic = {
+  hidden: {
+    opacity: 0,
+    scale: 0.95
+  },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    transition: {
+      duration: 0.2
+    }
+  }
+} as const;
+
+const overlayVariantsStatic = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { duration: 0.3 }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.2 }
+  }
+} as const;
+
+const dropdownVariantsStatic = {
+  hidden: {
+    height: 0,
+    opacity: 0,
+    transition: {
+      duration: 0.2
+    }
+  },
+  visible: {
+    height: 'auto',
+    opacity: 1,
+    transition: {
+      duration: 0.3
+    }
+  }
+} as const;
+
+const itemExpandVariantsStatic = {
+  collapsed: {
+    opacity: 0,
+    y: -5
+  },
+  expanded: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.05,
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  })
+} as const;
+
+const calendarVariantsStatic = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.01,
+      delayChildren: 0.1
+    }
+  }
+} as const;
+
+const cellVariantsStatic = {
+  hidden: { opacity: 0, scale: 0.9 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  }
+} as const;
+
+// Static grid style for the subject overview
+const GRID_STYLE = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gridTemplateAreas: `
+    "mat port"
+    "geo hist"
+    "bio quim"
+    "fis auto"
+  `,
+  gridGap: '1rem',
+  paddingBottom: '4rem'
+} as const;
 
 interface Class {
   id: string;
@@ -71,6 +185,19 @@ export default function SubjectsView() {
   const [expandedClasses, setExpandedClasses] = useState<Set<string>>(new Set());
   const cardRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth(); // Get authenticated user
+
+  // Memoized toggle handler to prevent re-creation on every render
+  const toggleClass = useCallback((classId: string) => {
+    setExpandedClasses(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(classId)) {
+        newSet.delete(classId);
+      } else {
+        newSet.add(classId);
+      }
+      return newSet;
+    });
+  }, []);
 
   // Define grid areas for subjects
   const subjectGridAreas: Record<string, string> = {
@@ -547,7 +674,7 @@ export default function SubjectsView() {
           key={subject.id}
           className="card hover:translate-y-[-3px] hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer
                     will-change-transform will-change-opacity p-4 sm:p-6"
-          variants={cardVariants}
+          variants={cardVariantsStatic}
           onClick={() => setSelectedSubject(subject.id)}
           style={{ 
             willChange: 'opacity, transform', 
@@ -593,109 +720,18 @@ export default function SubjectsView() {
         </motion.div>
   );
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
+  // Memoized variants so they stay stable across renders
+  const containerVariants = useMemo(() => containerVariantsStatic, []);
+  const cardVariants = useMemo(() => cardVariantsStatic, []);
+  const expandedViewVariants = useMemo(() => expandedViewVariantsStatic, []);
+  const overlayVariants = useMemo(() => overlayVariantsStatic, []);
+  const dropdownVariants = useMemo(() => dropdownVariantsStatic, []);
+  const itemExpandVariants = useMemo(() => itemExpandVariantsStatic, []);
+  const calendarVariants = useMemo(() => calendarVariantsStatic, []);
+  const cellVariants = useMemo(() => cellVariantsStatic, []);
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const expandedViewVariants = {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.95
-    },
-    show: { 
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.95,
-      transition: {
-        duration: 0.2
-      }
-    }
-  };
-
-  const overlayVariants = {
-    hidden: { opacity: 0 },
-    show: { 
-      opacity: 1,
-      transition: { duration: 0.3 }
-    },
-    exit: { 
-      opacity: 0,
-      transition: { duration: 0.2 }
-    }
-  };
-
-  // Toggle expanded state for a class
-  const toggleClass = (classId: string) => {
-    setExpandedClasses(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(classId)) {
-        newSet.delete(classId);
-      } else {
-        newSet.add(classId);
-      }
-      return newSet;
-    });
-  };
-
-  // Animation variants for class dropdown
-  const dropdownVariants = {
-    hidden: { 
-      height: 0, 
-      opacity: 0,
-      transition: {
-        duration: 0.2
-      }
-    },
-    visible: { 
-      height: 'auto', 
-      opacity: 1,
-      transition: {
-        duration: 0.3
-      }
-    }
-  };
-
-  // Smooth item animation variants
-  const itemExpandVariants = {
-    collapsed: { 
-      opacity: 0,
-      y: -5
-    },
-    expanded: (i: number) => ({ 
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.05,
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    })
-  };
+  // Memoize static grid style
+  const gridStyle = useMemo(() => GRID_STYLE, []);
 
   if (loading) {
     return (
@@ -769,18 +805,7 @@ export default function SubjectsView() {
               {/* CSS Grid with named template areas */}
               <div 
                 className="grid gap-6 sm:gap-8" 
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gridTemplateAreas: `
-                    "mat port"
-                    "geo hist"
-                    "bio quim"
-                    "fis auto"
-                  `,
-                  gridGap: '1rem',
-                  paddingBottom: '4rem' // Reduced bottom padding
-                }}
+                style={gridStyle}
               >
                 {subjects.map(subject => (
                   <div key={subject.id} style={{ gridArea: subject.gridArea || 'auto' }} className="mb-4">

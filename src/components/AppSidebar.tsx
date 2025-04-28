@@ -34,11 +34,6 @@ const navigationData = [
     title: "Planejamento",
     items: [
       {
-        title: "Planejamento",
-        url: "/plan",
-        icon: ClipboardCheck,
-      },
-      {
         title: "Suas Aulas",
         url: "/plan",
         icon: BookOpen,
