@@ -5,6 +5,7 @@ import supabase from '../../lib/supabase/supabase';
 import { subjectColorMap } from '../../lib/hooks/useStudySessions';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
 import { useAuth } from '../../lib/hooks/useAuth';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Performance optimisations: memoize variants & static styles to avoid recreation on each render
 
@@ -68,8 +69,40 @@ export default function SubjectsView() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [rawSubjectNames, setRawSubjectNames] = useState<string[]>([]);
   const [expandedClasses, setExpandedClasses] = useState<Set<string>>(new Set());
+  const [sidebarOffset, setSidebarOffset] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth(); // Get authenticated user
+
+  // Track sidebar state for proper card positioning
+  useEffect(() => {
+    const checkSidebar = () => {
+      // Find the sidebar element - looking for the element with width 240px
+      const sidebarElement = document.querySelector('div[class*="w-[240px]"][class*="translate-x-0"]');
+      // Set offset based on sidebar state
+      setSidebarOffset(sidebarElement && window.innerWidth >= 768 ? 120 : 0); // Half of 240px
+    };
+
+    // Check initially and on resize
+    checkSidebar();
+    
+    // Set up an interval to check for sidebar changes
+    const intervalId = setInterval(checkSidebar, 100);
+    window.addEventListener('resize', checkSidebar);
+    
+    // Listen for any class changes on body which might indicate sidebar state changes
+    const observer = new MutationObserver(checkSidebar);
+    observer.observe(document.body, { 
+      attributes: true,
+      subtree: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('resize', checkSidebar);
+      observer.disconnect();
+    };
+  }, []);
 
   // Memoized toggle handler to prevent re-creation on every render
   const toggleClass = useCallback((classId: string) => {
@@ -604,6 +637,13 @@ export default function SubjectsView() {
     </div>
   );
 
+  // Handle clicking outside the card
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setSelectedSubject(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -641,7 +681,7 @@ export default function SubjectsView() {
   );
 
   return (
-    <div className="w-full h-full overflow-y-auto">
+    <div className="w-full h-full overflow-y-auto hide-scrollbar">
       <GlobalStyle />
       
       <style jsx global>{`
@@ -661,6 +701,16 @@ export default function SubjectsView() {
           border-radius: inherit;
           box-shadow: inset 0 0 0 800px rgba(255,255,255,0.20);
           pointer-events: none;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .hide-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;  /* Chrome, Safari and Opera */
         }
       `}</style>
       
@@ -686,107 +736,120 @@ export default function SubjectsView() {
           </div>
         ) : (
           <>
-            {/* Dark overlay - separate from content for better animation */}
+            {/* Dark overlay */}
             <div 
               className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-10"
+              onClick={handleOverlayClick}
             />
             
-            {/* Container that follows the same structure as page.tsx */}
-            <div className="fixed inset-0 z-20 overflow-auto">
-              <div className="w-full min-h-full py-8 px-4 flex items-start justify-center">
-                <div
-                  key="expanded"
-                  className="w-full max-w-4xl mx-auto"
-                >
-                  {selectedSubjectData && (
-                    <div 
-                      ref={cardRef}
-                      className="card w-full overflow-hidden mb-20"
-                    >
-                      <div className="p-8">
-                        <SubjectNavigation />
+            {/* Card container - dynamically centered based on sidebar state */}
+            <div 
+              className="fixed inset-0 z-20 overflow-auto flex items-start justify-center py-8 px-4"
+              onClick={handleOverlayClick}
+              style={{
+                transition: "padding-left 0.2s ease-in-out"
+              }}
+            >
+              <div 
+                className="w-full max-w-4xl"
+                style={{ 
+                  transform: `translateX(${sidebarOffset}px)`,
+                  transition: "transform 0.2s ease-in-out"
+                }}
+              >
+                {selectedSubjectData && (
+                  <div 
+                    ref={cardRef}
+                    className="card w-full overflow-hidden mb-20"
+                    style={{ 
+                      background: 'rgba(255, 255, 255, 0.5)',
+                      backdropFilter: 'blur(24px) saturate(180%)'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="p-8">
+                      <SubjectNavigation />
 
-                        <div className="mb-12">
-                          <div className="flex items-center justify-between mb-12">
-                            <div>
-                              <h1 className="text-6xl text-[var(--text-primary)] font-medium mb-4">{selectedSubjectData.name}</h1>
-                              <h2 className="text-xl text-[var(--text-secondary)]">Sua média:</h2>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <ProgressCircle progress={selectedSubjectData.progress} color={selectedSubjectData.color} />
-                              <div className="text-[var(--text-secondary)] mt-2">{selectedSubjectData.progress}% assistido</div>
-                            </div>
+                      <div className="mb-12">
+                        <div className="flex items-center justify-between mb-12">
+                          <div>
+                            <h1 className="text-6xl text-[var(--text-primary)] font-medium mb-4">{selectedSubjectData.name}</h1>
+                            <h2 className="text-xl text-[var(--text-secondary)]">Sua média:</h2>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <ProgressCircle progress={selectedSubjectData.progress} color={selectedSubjectData.color} />
+                            <div className="text-[var(--text-secondary)] mt-2">{selectedSubjectData.progress}% assistido</div>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="space-y-8">
-                          {selectedSubjectData.subSubjects.map((subSubject) => (
-                            <div 
-                              key={subSubject.id}
-                              className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/60 transition-all duration-300"
-                            >
-                              <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-3xl text-gray-800 font-medium">
-                                  {subSubject.name}
-                                </h3>
-                                <ProgressCircle 
-                                  progress={70} 
-                                  size="small"
-                                  color={selectedSubjectData.color}
-                                />
-                              </div>
+                      <div className="space-y-8">
+                        {selectedSubjectData.subSubjects.map((subSubject) => (
+                          <div 
+                            key={subSubject.id}
+                            className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/60 transition-all duration-300"
+                          >
+                            <div className="flex items-center justify-between mb-6">
+                              <h3 className="text-3xl text-gray-800 font-medium">
+                                {subSubject.name}
+                              </h3>
+                              <ProgressCircle 
+                                progress={70} 
+                                size="small"
+                                color={selectedSubjectData.color}
+                              />
+                            </div>
 
-                              <div className="space-y-3">
-                                {subSubject.classes.map((class_) => (
+                            <div className="space-y-3">
+                              {subSubject.classes.map((class_) => (
+                                <div 
+                                  key={class_.id}
+                                  className="overflow-hidden rounded-2xl"
+                                >
                                   <div 
-                                    key={class_.id}
-                                    className="overflow-hidden rounded-2xl"
+                                    className="flex items-center justify-between text-[var(--text-primary)] bg-white/60 backdrop-blur-sm p-4 hover:bg-white/80 transition-colors cursor-pointer border border-white/10 rounded-t-lg"
+                                    onClick={() => toggleClass(class_.id)}
                                   >
-                                    <div 
-                                      className="flex items-center justify-between text-[var(--text-primary)] bg-white/60 backdrop-blur-sm p-4 hover:bg-white/80 transition-colors cursor-pointer border border-white/10 rounded-t-lg"
-                                      onClick={() => toggleClass(class_.id)}
-                                    >
-                                      <div className="flex items-center">
-                                        <ClassProgressCircle color={selectedSubjectData.color} />
-                                        <span className="text-lg text-[var(--text-primary)]">{class_.name}</span>
-                                      </div>
-                                      {expandedClasses.has(class_.id) ? (
-                                        <ChevronUp size={18} className="text-[var(--accent-blue)]" />
-                                      ) : (
-                                        <ChevronDown size={18} className="text-[var(--accent-blue)]" />
-                                      )}
+                                    <div className="flex items-center">
+                                      <ClassProgressCircle color={selectedSubjectData.color} />
+                                      <span className="text-lg text-[var(--text-primary)]">{class_.name}</span>
                                     </div>
-                                    
-                                    {expandedClasses.has(class_.id) && (
-                                      <div
-                                        className="bg-white/50 backdrop-blur-sm border-t border-white/10"
-                                      >
-                                        <div className="p-4 space-y-2">
-                                          <div className="flex items-center text-[var(--text-secondary)]">
-                                            <Calendar size={16} className="mr-2" />
-                                            <span>{class_.date || class_.day || 'Schedule not set'}</span>
-                                          </div>
-                                          <div className="flex items-center text-[var(--text-secondary)]">
-                                            <Clock size={16} className="mr-2" />
-                                            <span>
-                                              {class_.startTime && class_.finishTime 
-                                                ? `${class_.startTime} - ${class_.finishTime}`
-                                                : class_.time || 'Time not set'}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
+                                    {expandedClasses.has(class_.id) ? (
+                                      <ChevronUp size={18} className="text-[var(--accent-blue)]" />
+                                    ) : (
+                                      <ChevronDown size={18} className="text-[var(--accent-blue)]" />
                                     )}
                                   </div>
-                                ))}
-                              </div>
+                                  
+                                  {expandedClasses.has(class_.id) && (
+                                    <div
+                                      className="bg-white/50 backdrop-blur-sm border-t border-white/10"
+                                    >
+                                      <div className="p-4 space-y-2">
+                                        <div className="flex items-center text-[var(--text-secondary)]">
+                                          <Calendar size={16} className="mr-2" />
+                                          <span>{class_.date || class_.day || 'Schedule not set'}</span>
+                                        </div>
+                                        <div className="flex items-center text-[var(--text-secondary)]">
+                                          <Clock size={16} className="mr-2" />
+                                          <span>
+                                            {class_.startTime && class_.finishTime 
+                                              ? `${class_.startTime} - ${class_.finishTime}`
+                                              : class_.time || 'Time not set'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </>
