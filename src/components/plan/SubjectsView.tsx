@@ -564,23 +564,42 @@ export default function SubjectsView() {
   );
 
   const SubjectNavigation = () => (
-    <div className="bg-white/50 backdrop-blur-sm rounded-full p-1 flex items-center justify-center max-w-[280px] mx-auto mb-8 border border-white/10">
+    <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-1 flex items-center justify-center max-w-[280px] mx-auto mb-8 border border-white/10">
       <button
         onClick={handlePrevSubject}
-        className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
       
-      {selectedSubjectData && (
-        <div className="flex-1 px-4 py-2 text-sm font-medium text-[var(--text-primary)] text-center">
-          {selectedSubjectData.name}
+      <div className="flex-1 px-3 py-1.5 text-sm font-medium text-[var(--text-primary)] text-center relative overflow-hidden min-h-[1.5rem]">
+        <div className="h-full w-full relative">
+          <AnimatePresence mode="wait">
+            {selectedSubjectData && (
+              <motion.div
+                key={selectedSubjectData.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.25 }}
+                className="w-full px-1"
+                style={{ 
+                  wordBreak: "break-word", 
+                  hyphens: "auto", 
+                  lineHeight: 1.3,
+                  display: "block"
+                }}
+              >
+                {selectedSubjectData.name}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
+      </div>
       
       <button
         onClick={handleNextSubject}
-        className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        className="p-2 rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
       >
         <ChevronRight className="w-5 h-5" />
       </button>
