@@ -2,7 +2,19 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useClassSchedule, ClassDay, ClassSchedule, ClassInfo } from '../../lib/hooks/useClassSchedule';
-import { CalendarClock, Clock, CheckCircle2, ArrowRight, ChevronDown, ChevronUp, BookOpen, Link as LinkIcon } from 'lucide-react';
+import { 
+  CalendarClock, 
+  Clock, 
+  CheckCircle2, 
+  ArrowRight, 
+  ChevronDown, 
+  BookOpen, 
+  Link as LinkIcon, 
+  BellOff, 
+  Bell, 
+  MessageSquare, 
+  Phone 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
@@ -12,6 +24,10 @@ export default function TodayClassesWidget() {
   const [nextClassIndex, setNextClassIndex] = useState<number>(-1);
   const [expandedSubjects, setExpandedSubjects] = useState<number[]>([]);
   const [processedClasses, setProcessedClasses] = useState<Record<string, ClassInfo[]>>({});
+  const [notificationStatus, setNotificationStatus] = useState<Record<string, string>>({});
+  const [openNotificationMenu, setOpenNotificationMenu] = useState<number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; right: number } | null>(null);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   
   // Color mapping for subjects
   const subjectColors: Record<string, string> = {
@@ -52,6 +68,48 @@ export default function TodayClassesWidget() {
         : [...prev, index]
     );
   };
+
+  // Toggle notification menu
+  const toggleNotificationMenu = (index: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const button = buttonRefs.current[index];
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right + rect.width / 2
+      });
+    }
+    
+    setOpenNotificationMenu(current => current === index ? null : index);
+  };
+
+  // Set notification type
+  const setNotificationType = (subjectId: string, type: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation(); // Stop event bubbling
+    setNotificationStatus(prev => ({ ...prev, [subjectId]: type }));
+    setOpenNotificationMenu(null);
+  };
+  
+  // Click outside handler to close notification menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openNotificationMenu !== null) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.notification-dropdown')) {
+          setOpenNotificationMenu(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openNotificationMenu]);
   
   useEffect(() => {
     if (!classDays || classDays.length === 0) return;
@@ -265,309 +323,476 @@ export default function TodayClassesWidget() {
     }
   };
 
+  // Dropdown menu variants
+  const dropdownVariants = {
+    hidden: {
+      opacity: 0,
+      y: -5,
+      scale: 0.95,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.15,
+        ease: "easeOut",
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: -5,
+      scale: 0.95,
+      transition: {
+        duration: 0.1,
+        ease: "easeIn",
+      }
+    }
+  };
+
   return (
-    <Link href="/plan" className="block h-full will-change-transform will-change-opacity">
-      <motion.div 
-        className="card h-full relative flex flex-col shadow-lg hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 ease-in-out opacity-0"
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        style={{ 
-          willChange: 'opacity, transform', 
-          backfaceVisibility: 'hidden',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)'
-        }}
-      >
-        {/* Content container */}
-        <div className="relative h-full flex flex-col p-4 pl-6 z-20">
-          {/* Top section with title and date */}
-          <motion.div 
-            className="flex justify-between items-start mb-3"
-            variants={itemVariants}
-            style={{ willChange: 'opacity, transform' }}
-          >
-            <div className="text-[var(--text-primary)]">
-              <h2 className="text-3xl font-semibold mb-0.5">Suas Aulas</h2>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-[var(--text-secondary)]">
-                  {hasSubjects
-                    ? `${todayData.dayName}, ${todayData.date}`
-                    : "Veja seu cronograma"
-                  }
-                </p>
-                <span className="bg-[#10B981] text-white text-xs px-2 py-0.5 rounded-full font-medium">hoje</span>
-              </div>
-            </div>
-            
-            {!loading && todayData && hasSubjects && (
-              <div className="relative w-16 h-16">
-                {/* Background circle */}
-                <svg className="w-full h-full" viewBox="0 0 80 80">
-                  <circle 
-                    cx="40" 
-                    cy="40" 
-                    r="36" 
-                    fill="none" 
-                    stroke="rgba(16,185,129,0.2)" 
-                    strokeWidth="6"
-                  />
-                  {/* Progress circle - now always at 0% */}
-                  <circle 
-                    cx="40" 
-                    cy="40" 
-                    r="36" 
-                    fill="none" 
-                    stroke="#10B981" 
-                    strokeWidth="6" 
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference} // Set to full circumference for 0%
-                    strokeLinecap="round"
-                    transform="rotate(-90 40 40)"
-                  />
-                </svg>
-                {/* Percentage text */}
-                <div className="absolute inset-0 flex items-center justify-center text-[#10B981] font-medium text-sm">
-                  0%
+    <>
+      <Link href="/plan" className="block h-full will-change-transform will-change-opacity">
+        <motion.div 
+          className="card h-full relative flex flex-col shadow-lg hover:shadow-xl hover:translate-y-[-5px] transition-all duration-300 ease-in-out opacity-0"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          style={{ 
+            willChange: 'opacity, transform', 
+            backfaceVisibility: 'hidden',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)'
+          }}
+        >
+          {/* Content container */}
+          <div className="relative h-full flex flex-col p-4 pl-6 z-20">
+            {/* Top section with title and date */}
+            <motion.div 
+              className="flex justify-between items-start mb-3"
+              variants={itemVariants}
+              style={{ willChange: 'opacity, transform' }}
+            >
+              <div className="text-[var(--text-primary)]">
+                <h2 className="text-3xl font-semibold mb-0.5">Suas Aulas</h2>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {hasSubjects
+                      ? `${todayData.dayName}, ${todayData.date}`
+                      : "Veja seu cronograma"
+                    }
+                  </p>
+                  <span className="bg-[#10B981] text-white text-xs px-2 py-0.5 rounded-full font-medium">hoje</span>
                 </div>
               </div>
-            )}
-          </motion.div>
-          
-          {/* Middle section with subjects list */}
-          <motion.div 
-            className="flex-1 relative"
-            variants={itemVariants}
-          >
-            {!loading && hasSubjects ? (
-              <div 
-                className="absolute inset-0 pr-1 pb-2 overflow-y-auto"
-                style={{ 
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
-                }}
-              >
-                <style jsx global>{`
-                  .absolute::-webkit-scrollbar {
-                    display: none;
-                  }
-                `}</style>
-                <motion.div 
-                  className="space-y-2.5"
-                  variants={listVariants}
-                  style={{ willChange: 'opacity' }}
+              
+              {!loading && todayData && hasSubjects && (
+                <div className="relative w-16 h-16">
+                  {/* Background circle */}
+                  <svg className="w-full h-full" viewBox="0 0 80 80">
+                    <circle 
+                      cx="40" 
+                      cy="40" 
+                      r="36" 
+                      fill="none" 
+                      stroke="rgba(16,185,129,0.2)" 
+                      strokeWidth="6"
+                    />
+                    {/* Progress circle - now always at 0% */}
+                    <circle 
+                      cx="40" 
+                      cy="40" 
+                      r="36" 
+                      fill="none" 
+                      stroke="#10B981" 
+                      strokeWidth="6" 
+                      strokeDasharray={circumference}
+                      strokeDashoffset={circumference} // Set to full circumference for 0%
+                      strokeLinecap="round"
+                      transform="rotate(-90 40 40)"
+                    />
+                  </svg>
+                  {/* Percentage text */}
+                  <div className="absolute inset-0 flex items-center justify-center text-[#10B981] font-medium text-sm">
+                    0%
+                  </div>
+                </div>
+              )}
+            </motion.div>
+            
+            {/* Middle section with subjects list */}
+            <motion.div 
+              className="flex-1 relative"
+              variants={itemVariants}
+            >
+              {!loading && hasSubjects ? (
+                <div 
+                  className="absolute inset-0 pr-1 pb-2 overflow-y-auto"
+                  style={{ 
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch'
+                  }}
                 >
-                  {todayData.subjects.map((subject: ClassSchedule, i: number) => {
-                    const subjectDuration = getSubjectDuration(subject);
-                    const hasSubSubjects = processedClasses[subject.id]?.length > 0;
-                    const isExpanded = expandedSubjects.includes(i);
-                    
-                    return (
-                      <motion.div 
-                        key={i}
-                        variants={itemVariants}
-                        style={{ 
-                          willChange: 'opacity, transform', 
-                          backfaceVisibility: 'hidden',
-                          backdropFilter: 'blur(12px)',
-                          WebkitBackdropFilter: 'blur(12px)'
-                        }}
-                        className={`
-                          border border-white/10
-                          bg-white/50
-                          rounded-lg
-                          transition-all duration-300 ease-in-out
-                          hover:bg-white/60 hover:translate-y-[-3px] hover:shadow-lg
-                          cursor-pointer
-                          overflow-hidden
-                        `}
-                        layout="position"
-                      >
-                        {/* Subject card content */}
-                        <div 
-                          onClick={(e) => hasSubSubjects && toggleExpand(i, e)}
+                  <style jsx global>{`
+                    .absolute::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
+                  <motion.div 
+                    className="space-y-2.5"
+                    variants={listVariants}
+                    style={{ willChange: 'opacity' }}
+                  >
+                    {todayData.subjects.map((subject: ClassSchedule, i: number) => {
+                      const subjectDuration = getSubjectDuration(subject);
+                      const hasSubSubjects = processedClasses[subject.id]?.length > 0;
+                      const isExpanded = expandedSubjects.includes(i);
+                      const notificationType = notificationStatus[subject.id] || 'none';
+                      
+                      return (
+                        <motion.div 
+                          key={i}
+                          variants={itemVariants}
+                          style={{ 
+                            willChange: 'opacity, transform', 
+                            backfaceVisibility: 'hidden',
+                            backdropFilter: 'blur(12px)',
+                            WebkitBackdropFilter: 'blur(12px)'
+                          }}
                           className={`
-                            flex items-center gap-2 px-4 py-2.5
-                            ${hasSubSubjects ? 'cursor-pointer' : ''}
-                            ${isExpanded ? 'rounded-t-lg' : 'rounded-lg'}
-                            transition-all duration-200
+                            border border-white/10
+                            bg-white/50
+                            rounded-lg
+                            transition-all duration-300 ease-in-out
+                            hover:bg-white/60 hover:translate-y-[-3px] hover:shadow-lg
+                            cursor-pointer
+                            overflow-hidden
                           `}
+                          layout="position"
                         >
+                          {/* Subject card content */}
                           <div 
-                            className={`min-w-5 min-h-5 rounded-full flex items-center justify-center`}
-                            style={{ color: getSubjectColor(subject.name) }}
+                            className={`
+                              flex items-center gap-3 px-4 py-2.5
+                              ${hasSubSubjects ? 'cursor-pointer' : ''}
+                              ${isExpanded ? 'rounded-t-lg' : 'rounded-lg'}
+                              transition-all duration-200
+                            `}
+                            onClick={(e) => hasSubSubjects && toggleExpand(i, e)}
                           >
-                            {i === 0 ? (
-                              // Progress wheel for the first subject
-                              <div className="relative w-4 h-4">
-                                <svg className="w-full h-full transform -rotate-90">
-                                  <circle
-                                    className="text-gray-200"
-                                    strokeWidth={2}
-                                    stroke="currentColor"
-                                    fill="transparent"
-                                    r={7}
-                                    cx={8}
-                                    cy={8}
-                                  />
-                                  <circle
-                                    className="transition-all duration-300"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    stroke="#10B981"
-                                    fill="transparent"
-                                    r={7}
-                                    cx={8}
-                                    cy={8}
-                                    strokeDasharray={`${7 * 2 * Math.PI}`}
-                                    strokeDashoffset={`${7 * 2 * Math.PI * 0.7}`}
-                                  />
-                                </svg>
-                              </div>
-                            ) : i === nextClassIndex ? (
-                              <ArrowRight className="w-4 h-4 text-[var(--accent-blue)]" />
-                            ) : (
-                              <div className="w-2 h-2 rounded-full bg-[#10B981]"></div>
-                            )}
-                          </div>
-                          
-                          <div className="flex-1 text-[var(--text-primary)]">
-                            <div className="flex justify-between items-center">
-                              <p className="text-base font-medium truncate">
-                                {subject.name}
-                              </p>
-                              <span className="text-sm font-medium text-[var(--text-primary)] opacity-70 whitespace-nowrap">
-                                {getStartTime(subject)}
-                              </span>
+                            <div 
+                              className={`min-w-5 min-h-5 rounded-full flex items-center justify-center`}
+                              style={{ color: getSubjectColor(subject.name) }}
+                            >
+                              {i === 0 ? (
+                                // Progress wheel for the first subject
+                                <div className="relative w-4 h-4">
+                                  <svg className="w-full h-full transform -rotate-90">
+                                    <circle
+                                      className="text-gray-200"
+                                      strokeWidth={2}
+                                      stroke="currentColor"
+                                      fill="transparent"
+                                      r={7}
+                                      cx={8}
+                                      cy={8}
+                                    />
+                                    <circle
+                                      className="transition-all duration-300"
+                                      strokeWidth={2}
+                                      strokeLinecap="round"
+                                      stroke="#10B981"
+                                      fill="transparent"
+                                      r={7}
+                                      cx={8}
+                                      cy={8}
+                                      strokeDasharray={`${7 * 2 * Math.PI}`}
+                                      strokeDashoffset={`${7 * 2 * Math.PI * 0.7}`}
+                                    />
+                                  </svg>
+                                </div>
+                              ) : i === nextClassIndex ? (
+                                <ArrowRight className="w-4 h-4 text-[var(--accent-blue)]" />
+                              ) : (
+                                <div className="w-2 h-2 rounded-full bg-[#10B981]"></div>
+                              )}
                             </div>
                             
-                            <div className="flex justify-between items-center">
+                            {/* Subject name */}
+                            <div className="flex-1">
+                              <p className="text-base font-medium truncate text-[var(--text-primary)]">
+                                {subject.name}
+                              </p>
                               {subjectDuration > 0 && (
                                 <p className="text-xs text-[var(--text-primary)] opacity-70 flex items-center">
                                   <Clock className="w-3 h-3 inline mr-1" />
                                   {formatStudyTime(subjectDuration)}
                                 </p>
                               )}
+                            </div>
+                            
+                            {/* Bell icon and time */}
+                            <div className="flex items-center gap-2">
+                              {/* Bell */}
+                              <div className="relative notification-dropdown">
+                                <motion.button
+                                  ref={(el: HTMLButtonElement | null) => {
+                                    if (el) buttonRefs.current[i] = el;
+                                  }}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleNotificationMenu(i, e);
+                                  }}
+                                  className="p-1 rounded-full hover:bg-black/5 transition-colors"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  {notificationType === 'none' ? (
+                                    <BellOff size={20} className="text-gray-500" />
+                                  ) : notificationType === 'app' ? (
+                                    <Bell size={20} className="text-[#10B981]" />
+                                  ) : notificationType === 'whatsapp' ? (
+                                    <MessageSquare size={20} className="text-[#25D366]" />
+                                  ) : (
+                                    <Phone size={20} className="text-[var(--accent-blue)]" />
+                                  )}
+                                </motion.button>
+                              </div>
                               
+                              {/* Time and topics */}
+                              <div>
+                                <div className="text-sm font-medium text-[var(--text-primary)] text-right whitespace-nowrap">
+                                  {getStartTime(subject)}
+                                </div>
+                                
+                                {hasSubSubjects && (
+                                  <div className="text-xs text-[var(--text-primary)] opacity-70 text-right whitespace-nowrap">
+                                    {processedClasses[subject.id].length} {processedClasses[subject.id].length === 1 ? 'tópico' : 'tópicos'}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Expand button */}
                               {hasSubSubjects && (
-                                <span className="text-xs text-[var(--text-primary)] opacity-70 flex items-center">
-                                  <BookOpen className="w-3 h-3 inline mr-1" />
-                                  {processedClasses[subject.id].length} {processedClasses[subject.id].length === 1 ? 'tópico' : 'tópicos'}
-                                </span>
+                                <motion.button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleExpand(i, e);
+                                  }}
+                                  className="p-1 rounded-full hover:bg-black/10"
+                                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                                >
+                                  <ChevronDown size={16} className="text-[var(--accent-blue)]" />
+                                </motion.button>
                               )}
                             </div>
                           </div>
                           
-                          {hasSubSubjects && (
-                            <motion.button 
-                              onClick={(e) => toggleExpand(i, e)} 
-                              className="p-1 rounded-full hover:bg-black/10"
-                              animate={{ rotate: isExpanded ? 180 : 0 }}
-                              transition={{ duration: 0.3, ease: "easeInOut" }}
-                            >
-                              <ChevronDown size={16} className="text-[var(--accent-blue)]" />
-                            </motion.button>
-                          )}
-                        </div>
-                        
-                        {/* Sub-subjects expandable section with improved animation */}
-                        <AnimatePresence initial={false}>
-                          {isExpanded && hasSubSubjects && (
-                            <motion.div 
-                              key={`expand-${i}`}
-                              variants={expandVariants}
-                              initial="collapsed"
-                              animate="expanded"
-                              exit="exit"
-                              className="bg-transparent backdrop-blur-sm"
-                            >
-                              <div className="px-2.5 pb-2.5">
-                                <div className="space-y-1.5 mt-1 pl-7 border-l border-white/10">
-                                  {processedClasses[subject.id].map((cls, j) => {
-                                    const status = getClassStatus(i, j);
-                                    
-                                    return (
-                                      <div 
-                                        key={cls.id || j}
-                                        className="py-1 text-[var(--text-primary)] hover:bg-white/20 rounded transition-all duration-200 px-2 -ml-2"
-                                        onClick={(e) => e.preventDefault()} // Prevent navigation on click
-                                      >
-                                        <div className="flex items-start justify-between">
-                                          <div className="flex items-start gap-2 flex-1">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)] mt-1.5"></div>
-                                            <div className="flex-1">
-                                              <p className="text-sm">{cls.subSubjectName || cls.name}</p>
-                                              
-                                              {status && (
-                                                <span className={`
-                                                  text-xs rounded-full px-1.5 py-0.5 mt-1 inline-block
-                                                  ${status === 'Concluído' ? 'bg-[var(--accent-success)] bg-opacity-20 text-[var(--accent-success)] font-medium' :
-                                                    status === 'Em progresso' ? 'bg-gray-200 bg-opacity-70 text-gray-600 font-medium' :
-                                                    status === 'Próximo' ? 'bg-blue-100 text-blue-600 font-medium' :
-                                                    'bg-gray-100 text-gray-500 font-medium'}
-                                                `}>
-                                                  {status === '' ? 'Não iniciado' : status}
-                                                </span>
-                                              )}
+                          {/* Sub-subjects expandable section with improved animation */}
+                          <AnimatePresence initial={false}>
+                            {isExpanded && hasSubSubjects && (
+                              <motion.div 
+                                key={`expand-${i}`}
+                                variants={expandVariants}
+                                initial="collapsed"
+                                animate="expanded"
+                                exit="exit"
+                                className="bg-transparent backdrop-blur-sm"
+                              >
+                                <div className="px-2.5 pb-2.5">
+                                  <div className="space-y-1.5 mt-1 pl-7 border-l border-white/10">
+                                    {processedClasses[subject.id].map((cls, j) => {
+                                      const status = getClassStatus(i, j);
+                                      
+                                      return (
+                                        <div 
+                                          key={cls.id || j}
+                                          className="py-1 text-[var(--text-primary)] hover:bg-white/20 rounded transition-all duration-200 px-2 -ml-2"
+                                          onClick={(e) => e.preventDefault()} // Prevent navigation on click
+                                        >
+                                          <div className="flex items-start justify-between">
+                                            <div className="flex items-start gap-2 flex-1">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)] mt-1.5"></div>
+                                              <div className="flex-1">
+                                                <p className="text-sm">{cls.subSubjectName || cls.name}</p>
+                                                
+                                                {status && (
+                                                  <span className={`
+                                                    text-xs rounded-full px-1.5 py-0.5 mt-1 inline-block
+                                                    ${status === 'Concluído' ? 'bg-[var(--accent-success)] bg-opacity-20 text-[var(--accent-success)] font-medium' :
+                                                      status === 'Em progresso' ? 'bg-gray-200 bg-opacity-70 text-gray-600 font-medium' :
+                                                      status === 'Próximo' ? 'bg-blue-100 text-blue-600 font-medium' :
+                                                      'bg-gray-100 text-gray-500 font-medium'}
+                                                  `}>
+                                                    {status === '' ? 'Não iniciado' : status}
+                                                  </span>
+                                                )}
+                                              </div>
                                             </div>
+                                            
+                                            {cls.link && (
+                                              <a 
+                                                href={cls.link} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="p-2 rounded-full bg-white/15 border border-white/30 shadow-sm hover:shadow-md hover:bg-white/25 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center justify-center"
+                                              >
+                                                <LinkIcon size={15} className="text-[var(--accent-blue)]" />
+                                              </a>
+                                            )}
                                           </div>
-                                          
-                                          {cls.link && (
-                                            <a 
-                                              href={cls.link} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer" 
-                                              onClick={(e) => e.stopPropagation()}
-                                              className="p-2 rounded-full bg-white/15 border border-white/30 shadow-sm hover:shadow-md hover:bg-white/25 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center justify-center"
-                                            >
-                                              <LinkIcon size={15} className="text-[var(--accent-blue)]" />
-                                            </a>
-                                          )}
                                         </div>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                </div>
+              ) : !loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-xs text-[var(--text-secondary)]">Sem aulas hoje</p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-xs text-[var(--text-secondary)]">Carregando...</p>
+                </div>
+              )}
+            </motion.div>
+            
+            {/* Bottom info section with total study time */}
+            <motion.div 
+              variants={itemVariants}
+              className={`mt-2.5 bg-white/50 backdrop-blur-sm border-0 rounded-lg px-3.5 py-2.5 text-[var(--text-primary)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] z-30 relative overflow-hidden ${
+                hasSubjects && totalStudyTime > 0 ? 'block' : 'hidden'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs flex items-center text-[var(--text-primary)] opacity-80">
+                  <CalendarClock className="w-3 h-3 mr-1" />
+                  Tempo total de estudo
+                </span>
+                <span className="text-xs font-medium">
+                  {formatStudyTime(totalStudyTime)}
+                </span>
               </div>
-            ) : !loading ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-xs text-[var(--text-secondary)]">Sem aulas hoje</p>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-xs text-[var(--text-secondary)]">Carregando...</p>
-              </div>
-            )}
-          </motion.div>
-          
-          {/* Bottom info section with total study time */}
-          <motion.div 
-            variants={itemVariants}
-            className={`mt-2.5 bg-white/50 backdrop-blur-sm border-0 rounded-lg px-3.5 py-2.5 text-[var(--text-primary)] shadow-[0_2px_8px_rgba(0,0,0,0.05)] z-30 relative overflow-hidden ${
-              hasSubjects && totalStudyTime > 0 ? 'block' : 'hidden'
-            }`}
+            </motion.div>
+          </div>
+        </motion.div>
+      </Link>
+
+      {/* Dropdown Menu - Positioned in a portal */}
+      <AnimatePresence>
+        {openNotificationMenu !== null && dropdownPosition && (
+          <div 
+            className="fixed inset-0 z-[9999]" 
+            onClick={() => {
+              setOpenNotificationMenu(null);
+              setDropdownPosition(null);
+            }}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs flex items-center text-[var(--text-primary)] opacity-80">
-                <CalendarClock className="w-3 h-3 mr-1" />
-                Tempo total de estudo
-              </span>
-              <span className="text-xs font-medium">
-                {formatStudyTime(totalStudyTime)}
-              </span>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-    </Link>
+            <motion.div
+              className="fixed bg-white shadow-xl rounded-lg py-1 w-44 border border-gray-100"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={dropdownVariants}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                top: `${dropdownPosition.top}px`,
+                right: `${dropdownPosition.right}px`,
+                zIndex: 9999,
+                transformOrigin: 'top right',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              <div className="py-1 px-2 text-xs font-medium text-gray-500 border-b border-gray-100">
+                Notificações
+              </div>
+              
+              <button
+                className="flex items-center w-full px-3 py-1.5 text-xs hover:bg-gray-50 text-[var(--text-primary)] transition-colors whitespace-nowrap"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const subject = todayData?.subjects[openNotificationMenu];
+                  if (subject) {
+                    setNotificationType(subject.id, 'app', e);
+                    setOpenNotificationMenu(null);
+                    setDropdownPosition(null);
+                  }
+                }}
+              >
+                <Bell size={12} className="mr-2 text-[#10B981] flex-shrink-0" />
+                <span className="truncate">App</span>
+              </button>
+              
+              <button
+                className="flex items-center w-full px-3 py-1.5 text-xs hover:bg-gray-50 text-[var(--text-primary)] transition-colors whitespace-nowrap"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const subject = todayData?.subjects[openNotificationMenu];
+                  if (subject) {
+                    setNotificationType(subject.id, 'whatsapp', e);
+                    setOpenNotificationMenu(null);
+                    setDropdownPosition(null);
+                  }
+                }}
+              >
+                <MessageSquare size={12} className="mr-2 text-[#25D366] flex-shrink-0" />
+                <span className="truncate">WhatsApp</span>
+              </button>
+              
+              <button
+                className="flex items-center w-full px-3 py-1.5 text-xs hover:bg-gray-50 text-[var(--text-primary)] transition-colors whitespace-nowrap"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const subject = todayData?.subjects[openNotificationMenu];
+                  if (subject) {
+                    setNotificationType(subject.id, 'call', e);
+                    setOpenNotificationMenu(null);
+                    setDropdownPosition(null);
+                  }
+                }}
+              >
+                <Phone size={12} className="mr-2 text-[var(--accent-blue)] flex-shrink-0" />
+                <span className="truncate">Ligação</span>
+              </button>
+
+              <div className="border-t border-gray-100 my-0.5"></div>
+              
+              <button
+                className="flex items-center w-full px-3 py-1.5 text-xs hover:bg-gray-50 text-gray-500 transition-colors whitespace-nowrap"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const subject = todayData?.subjects[openNotificationMenu];
+                  if (subject) {
+                    setNotificationType(subject.id, 'none', e);
+                    setOpenNotificationMenu(null);
+                    setDropdownPosition(null);
+                  }
+                }}
+              >
+                <BellOff size={12} className="mr-2 flex-shrink-0" />
+                <span className="truncate">Desativar</span>
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 } 
