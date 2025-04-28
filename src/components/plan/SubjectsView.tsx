@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import supabase from '../../lib/supabase/supabase';
 import { subjectColorMap } from '../../lib/hooks/useStudySessions';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react';
@@ -11,120 +10,6 @@ import { useAuth } from '../../lib/hooks/useAuth';
 
 // Removed runtime DOM mutations that forced reflow – handled via CSS instead
 const GlobalStyle = () => null;
-
-// -------------------- Static animation variants --------------------
-// Extracted outside the component body so they are created once
-const containerVariantsStatic = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-} as const;
-
-const cardVariantsStatic = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-      ease: "easeOut"
-    }
-  }
-} as const;
-
-const expandedViewVariantsStatic = {
-  hidden: {
-    opacity: 0,
-    scale: 0.95
-  },
-  show: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.3,
-      ease: "easeOut"
-    }
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-    transition: {
-      duration: 0.2
-    }
-  }
-} as const;
-
-const overlayVariantsStatic = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { duration: 0.3 }
-  },
-  exit: {
-    opacity: 0,
-    transition: { duration: 0.2 }
-  }
-} as const;
-
-const dropdownVariantsStatic = {
-  hidden: {
-    height: 0,
-    opacity: 0,
-    transition: {
-      duration: 0.2
-    }
-  },
-  visible: {
-    height: 'auto',
-    opacity: 1,
-    transition: {
-      duration: 0.3
-    }
-  }
-} as const;
-
-const itemExpandVariantsStatic = {
-  collapsed: {
-    opacity: 0,
-    y: -5
-  },
-  expanded: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.05,
-      duration: 0.3,
-      ease: "easeOut"
-    }
-  })
-} as const;
-
-const calendarVariantsStatic = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.01,
-      delayChildren: 0.1
-    }
-  }
-} as const;
-
-const cellVariantsStatic = {
-  hidden: { opacity: 0, scale: 0.9 },
-  show: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 0.3,
-      ease: "easeOut"
-    }
-  }
-} as const;
 
 // Static grid style for the subject overview
 const GRID_STYLE = {
@@ -670,68 +555,54 @@ export default function SubjectsView() {
   );
 
   const SubjectCard = ({ subject }: { subject: Subject }) => (
-        <motion.div 
-          key={subject.id}
-          className="card hover:translate-y-[-3px] hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer
-                    will-change-transform will-change-opacity p-4 sm:p-6"
-          variants={cardVariantsStatic}
-          onClick={() => setSelectedSubject(subject.id)}
-          style={{ 
-            willChange: 'opacity, transform', 
-            backfaceVisibility: 'hidden'
-          }}
+    <div 
+      key={subject.id}
+      className="card hover:translate-y-[-3px] hover:shadow-lg transition-all duration-300 ease-in-out cursor-pointer
+                will-change-transform will-change-opacity p-4 sm:p-6"
+      onClick={() => setSelectedSubject(subject.id)}
+      style={{ 
+        willChange: 'opacity, transform', 
+        backfaceVisibility: 'hidden'
+      }}
+    >
+      <div className="flex items-center mb-3 sm:mb-4">
+        <div
+          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3 flex items-center justify-center text-white font-bold text-base sm:text-lg"
+          style={{ backgroundColor: subject.color }}
         >
-          <div className="flex items-center mb-3 sm:mb-4">
-            <div
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3 flex items-center justify-center text-white font-bold text-base sm:text-lg"
-              style={{ backgroundColor: subject.color }}
-            >
-              {subject.name.charAt(0)}
-            </div>
-            <h3 className="text-lg sm:text-xl font-medium truncate text-black">{subject.name}</h3>
-          </div>
-          
-          <div className="mb-3 sm:mb-4">
-            <div className="flex justify-between text-xs sm:text-sm mb-1 text-black">
-              <span>Progress</span>
-              <span>{subject.progress}%</span>
-            </div>
-            <div className="w-full bg-black/10 rounded-full h-1.5 sm:h-2">
-              <div 
-                className="h-1.5 sm:h-2 rounded-full" 
-                style={{ 
-                  width: `${subject.progress}%`,
-                  backgroundColor: subject.color
-                }}
-              ></div>
-            </div>
-          </div>
-          
-          <div className="text-xs sm:text-sm text-black">
-            <div className="flex justify-between mb-1">
-              <span>Next class:</span>
-              <span>{subject.nextClass}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Classes:</span>
-              <span>{subject.completedClasses} of {subject.totalClasses}</span>
-            </div>
-          </div>
-        </motion.div>
+          {subject.name.charAt(0)}
+        </div>
+        <h3 className="text-lg sm:text-xl font-medium truncate text-black">{subject.name}</h3>
+      </div>
+      
+      <div className="mb-3 sm:mb-4">
+        <div className="flex justify-between text-xs sm:text-sm mb-1 text-black">
+          <span>Progress</span>
+          <span>{subject.progress}%</span>
+        </div>
+        <div className="w-full bg-black/10 rounded-full h-1.5 sm:h-2">
+          <div 
+            className="h-1.5 sm:h-2 rounded-full" 
+            style={{ 
+              width: `${subject.progress}%`,
+              backgroundColor: subject.color
+            }}
+          ></div>
+        </div>
+      </div>
+      
+      <div className="text-xs sm:text-sm text-black">
+        <div className="flex justify-between mb-1">
+          <span>Next class:</span>
+          <span>{subject.nextClass}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Classes:</span>
+          <span>{subject.completedClasses} of {subject.totalClasses}</span>
+        </div>
+      </div>
+    </div>
   );
-
-  // Memoized variants so they stay stable across renders
-  const containerVariants = useMemo(() => containerVariantsStatic, []);
-  const cardVariants = useMemo(() => cardVariantsStatic, []);
-  const expandedViewVariants = useMemo(() => expandedViewVariantsStatic, []);
-  const overlayVariants = useMemo(() => overlayVariantsStatic, []);
-  const dropdownVariants = useMemo(() => dropdownVariantsStatic, []);
-  const itemExpandVariants = useMemo(() => itemExpandVariantsStatic, []);
-  const calendarVariants = useMemo(() => calendarVariantsStatic, []);
-  const cellVariants = useMemo(() => cellVariantsStatic, []);
-
-  // Memoize static grid style
-  const gridStyle = useMemo(() => GRID_STYLE, []);
 
   if (loading) {
     return (
@@ -794,151 +665,132 @@ export default function SubjectsView() {
       `}</style>
       
       <div className="pb-40">
-        <AnimatePresence mode="wait">
-          {!selectedSubject ? (
-            <motion.div 
-              className="px-4 sm:px-6 max-w-6xl mx-auto mt-4 pb-64"
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
+        {!selectedSubject ? (
+          <div 
+            className="px-4 sm:px-6 max-w-6xl mx-auto mt-4 pb-64"
+          >
+            {/* CSS Grid with named template areas */}
+            <div 
+              className="grid gap-6 sm:gap-8" 
+              style={GRID_STYLE}
             >
-              {/* CSS Grid with named template areas */}
-              <div 
-                className="grid gap-6 sm:gap-8" 
-                style={gridStyle}
-              >
-                {subjects.map(subject => (
-                  <div key={subject.id} style={{ gridArea: subject.gridArea || 'auto' }} className="mb-4">
-                    <SubjectCard subject={subject} />
-                  </div>
-                ))}
-              </div>
-              
-              {/* Additional spacer for better scrolling */}
-              <div className="h-64"></div>
-            </motion.div>
-          ) : (
-            <>
-              {/* Dark overlay - separate from content for better animation */}
-              <motion.div 
-                className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-10"
-                variants={overlayVariants}
-                initial="hidden"
-                animate="show"
-                exit="exit"
-              />
-              
-              {/* Container that follows the same structure as page.tsx */}
-              <div className="fixed inset-0 z-20 overflow-auto">
-                <div className="w-full min-h-full py-8 px-4 flex items-start justify-center">
-                  <motion.div
-                    key="expanded"
-                    variants={expandedViewVariants}
-                    initial="hidden"
-                    animate="show"
-                    exit="exit"
-                    className="w-full max-w-4xl mx-auto"
-                  >
-                    {selectedSubjectData && (
-                      <div 
-                        ref={cardRef}
-                        className="card w-full overflow-hidden mb-20"
-                      >
-                        <div className="p-8">
-                          <SubjectNavigation />
+              {subjects.map(subject => (
+                <div key={subject.id} style={{ gridArea: subject.gridArea || 'auto' }} className="mb-4">
+                  <SubjectCard subject={subject} />
+                </div>
+              ))}
+            </div>
+            
+            {/* Additional spacer for better scrolling */}
+            <div className="h-64"></div>
+          </div>
+        ) : (
+          <>
+            {/* Dark overlay - separate from content for better animation */}
+            <div 
+              className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-10"
+            />
+            
+            {/* Container that follows the same structure as page.tsx */}
+            <div className="fixed inset-0 z-20 overflow-auto">
+              <div className="w-full min-h-full py-8 px-4 flex items-start justify-center">
+                <div
+                  key="expanded"
+                  className="w-full max-w-4xl mx-auto"
+                >
+                  {selectedSubjectData && (
+                    <div 
+                      ref={cardRef}
+                      className="card w-full overflow-hidden mb-20"
+                    >
+                      <div className="p-8">
+                        <SubjectNavigation />
 
-                          <div className="mb-12">
-                            <div className="flex items-center justify-between mb-12">
-                              <div>
-                                <h1 className="text-6xl text-[var(--text-primary)] font-medium mb-4">{selectedSubjectData.name}</h1>
-                                <h2 className="text-xl text-[var(--text-secondary)]">Sua média:</h2>
-                              </div>
-                              <div className="flex flex-col items-end">
-                                <ProgressCircle progress={selectedSubjectData.progress} color={selectedSubjectData.color} />
-                                <div className="text-[var(--text-secondary)] mt-2">{selectedSubjectData.progress}% assistido</div>
-                              </div>
+                        <div className="mb-12">
+                          <div className="flex items-center justify-between mb-12">
+                            <div>
+                              <h1 className="text-6xl text-[var(--text-primary)] font-medium mb-4">{selectedSubjectData.name}</h1>
+                              <h2 className="text-xl text-[var(--text-secondary)]">Sua média:</h2>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <ProgressCircle progress={selectedSubjectData.progress} color={selectedSubjectData.color} />
+                              <div className="text-[var(--text-secondary)] mt-2">{selectedSubjectData.progress}% assistido</div>
                             </div>
                           </div>
+                        </div>
 
-                          <div className="space-y-8">
-                            {selectedSubjectData.subSubjects.map((subSubject) => (
-                              <div 
-                                key={subSubject.id}
-                                className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/60 transition-all duration-300"
-                              >
-                                <div className="flex items-center justify-between mb-6">
-                                  <h3 className="text-3xl text-gray-800 font-medium">
-                                    {subSubject.name}
-                                  </h3>
-                                  <ProgressCircle 
-                                    progress={70} 
-                                    size="small"
-                                    color={selectedSubjectData.color}
-                                  />
-                                </div>
-
-                                <div className="space-y-3">
-                                  {subSubject.classes.map((class_) => (
-                                    <div 
-                                      key={class_.id}
-                                      className="overflow-hidden rounded-2xl"
-                                    >
-                                      <div 
-                                        className="flex items-center justify-between text-[var(--text-primary)] bg-white/60 backdrop-blur-sm p-4 hover:bg-white/80 transition-colors cursor-pointer border border-white/10 rounded-t-lg"
-                                        onClick={() => toggleClass(class_.id)}
-                                      >
-                                        <div className="flex items-center">
-                                          <ClassProgressCircle color={selectedSubjectData.color} />
-                                          <span className="text-lg text-[var(--text-primary)]">{class_.name}</span>
-                                        </div>
-                                        {expandedClasses.has(class_.id) ? (
-                                          <ChevronUp size={18} className="text-[var(--accent-blue)]" />
-                                        ) : (
-                                          <ChevronDown size={18} className="text-[var(--accent-blue)]" />
-                                        )}
-                                      </div>
-                                      
-                                      <AnimatePresence>
-                                        {expandedClasses.has(class_.id) && (
-                                          <motion.div
-                                            initial="hidden"
-                                            animate="visible"
-                                            exit="hidden"
-                                            variants={dropdownVariants}
-                                            className="bg-white/50 backdrop-blur-sm border-t border-white/10"
-                                          >
-                                            <div className="p-4 space-y-2">
-                                              <div className="flex items-center text-[var(--text-secondary)]">
-                                                <Calendar size={16} className="mr-2" />
-                                                <span>{class_.date || class_.day || 'Schedule not set'}</span>
-                                              </div>
-                                              <div className="flex items-center text-[var(--text-secondary)]">
-                                                <Clock size={16} className="mr-2" />
-                                                <span>
-                                                  {class_.startTime && class_.finishTime 
-                                                    ? `${class_.startTime} - ${class_.finishTime}`
-                                                    : class_.time || 'Time not set'}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
-                                    </div>
-                                  ))}
-                                </div>
+                        <div className="space-y-8">
+                          {selectedSubjectData.subSubjects.map((subSubject) => (
+                            <div 
+                              key={subSubject.id}
+                              className="bg-white/50 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:bg-white/60 transition-all duration-300"
+                            >
+                              <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-3xl text-gray-800 font-medium">
+                                  {subSubject.name}
+                                </h3>
+                                <ProgressCircle 
+                                  progress={70} 
+                                  size="small"
+                                  color={selectedSubjectData.color}
+                                />
                               </div>
-                            ))}
-                          </div>
+
+                              <div className="space-y-3">
+                                {subSubject.classes.map((class_) => (
+                                  <div 
+                                    key={class_.id}
+                                    className="overflow-hidden rounded-2xl"
+                                  >
+                                    <div 
+                                      className="flex items-center justify-between text-[var(--text-primary)] bg-white/60 backdrop-blur-sm p-4 hover:bg-white/80 transition-colors cursor-pointer border border-white/10 rounded-t-lg"
+                                      onClick={() => toggleClass(class_.id)}
+                                    >
+                                      <div className="flex items-center">
+                                        <ClassProgressCircle color={selectedSubjectData.color} />
+                                        <span className="text-lg text-[var(--text-primary)]">{class_.name}</span>
+                                      </div>
+                                      {expandedClasses.has(class_.id) ? (
+                                        <ChevronUp size={18} className="text-[var(--accent-blue)]" />
+                                      ) : (
+                                        <ChevronDown size={18} className="text-[var(--accent-blue)]" />
+                                      )}
+                                    </div>
+                                    
+                                    {expandedClasses.has(class_.id) && (
+                                      <div
+                                        className="bg-white/50 backdrop-blur-sm border-t border-white/10"
+                                      >
+                                        <div className="p-4 space-y-2">
+                                          <div className="flex items-center text-[var(--text-secondary)]">
+                                            <Calendar size={16} className="mr-2" />
+                                            <span>{class_.date || class_.day || 'Schedule not set'}</span>
+                                          </div>
+                                          <div className="flex items-center text-[var(--text-secondary)]">
+                                            <Clock size={16} className="mr-2" />
+                                            <span>
+                                              {class_.startTime && class_.finishTime 
+                                                ? `${class_.startTime} - ${class_.finishTime}`
+                                                : class_.time || 'Time not set'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    )}
-                  </motion.div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </>
-          )}
-        </AnimatePresence>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
