@@ -526,9 +526,23 @@ export default function YourClassesView() {
                                               }}
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                // Navigate to the dynamic class page with the class ID
-                                                router.push(`/learn/${cls.id}`);
+                                                e.preventDefault(); // Prevent default link behavior
+                                                // Safe navigation using Next.js router
+                                                // Using the class ID prevents any external link routing
+                                                const targetPath = `/learn/${cls.id}`;
+                                                console.log(`Navigating to: ${targetPath}`);
+                                                router.push(targetPath);
                                               }}
+                                              data-route-target={`/learn/${cls.id}`}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                  e.preventDefault();
+                                                  const targetPath = `/learn/${cls.id}`;
+                                                  router.push(targetPath);
+                                                }
+                                              }}
+                                              role="button"
+                                              tabIndex={0}
                                               style={{ cursor: 'pointer' }}
                                             >
                                               <div className="flex items-center">
@@ -555,7 +569,7 @@ export default function YourClassesView() {
                                                     />
                                                   </svg>
                                                 )}
-                                </div>
+                              </div>
                                             </motion.div>
                               ))}
                             </div>
