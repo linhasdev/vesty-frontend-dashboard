@@ -110,6 +110,7 @@ export default function YourClassesView() {
   }, [classDays]);
   
   // Add debugging for current state
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     console.log('Current component state:', { 
       loading, 

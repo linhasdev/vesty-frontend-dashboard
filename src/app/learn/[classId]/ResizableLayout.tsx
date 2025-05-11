@@ -69,6 +69,73 @@ export default function ResizableLayout({
     }
   }, [centerWidth, centerVisible]);
   
+  // Helper function to redistribute panel widths when center panel is reopened
+  const redistributePanelWidths = () => {
+    // Get the original proportions between panels
+    const totalSidePanels = 
+      (classListVisible ? prevClassListWidth : 0) + 
+      (leftVisible ? prevLeftWidth : 0) + 
+      (rightVisible ? prevRightWidth : 0);
+    
+    if (totalSidePanels === 0) return;
+    
+    // Target center width should be close to prevCenterWidth but adjusted for currently visible panels
+    const targetCenterWidth = Math.min(prevCenterWidth, 60); // Limit max center width to 60%
+    const remainingWidth = 100 - targetCenterWidth;
+    
+    // Count visible panels
+    const visiblePanels = 
+      (classListVisible ? 1 : 0) + 
+      (leftVisible ? 1 : 0) + 
+      (rightVisible ? 1 : 0);
+      
+    if (visiblePanels === 0) return;
+    
+    // Distribute remaining width proportionally among visible panels
+    if (classListVisible) {
+      setClassListWidth(remainingWidth * (prevClassListWidth / totalSidePanels));
+    }
+    
+    if (leftVisible) {
+      setLeftWidth(remainingWidth * (prevLeftWidth / totalSidePanels));
+    }
+    
+    if (rightVisible) {
+      setRightWidth(remainingWidth * (prevRightWidth / totalSidePanels));
+    }
+  };
+  
+  // Use effect to handle initial panel states
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // Initially set panels to their default states
+    if (!classListVisible && initialClassListVisible) {
+      setClassListVisible(true);
+    }
+    
+    if (!leftVisible && initialLeftVisible) {
+      setLeftVisible(true);
+    }
+    
+    if (!rightVisible && initialRightVisible) {
+      setRightVisible(true);
+    }
+    
+    if (!centerVisible && initialCenterVisible) {
+      setCenterVisible(true);
+      
+      // When reopening center panel, redistribute space
+      if (initialCenterVisible && !centerVisible) {
+        // Restore panels to their previous proportions
+        redistributePanelWidths();
+      }
+    }
+  }, [
+    initialClassListVisible, initialLeftVisible, initialRightVisible, initialCenterVisible, 
+    classListVisible, leftVisible, rightVisible, centerVisible, 
+    prevClassListWidth, prevLeftWidth, prevRightWidth
+  ]);
+  
   // Update visibility when props change
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -106,44 +173,8 @@ export default function ResizableLayout({
   }, [
     initialClassListVisible, initialLeftVisible, initialRightVisible, initialCenterVisible, 
     classListVisible, leftVisible, rightVisible, centerVisible, 
-    prevClassListWidth, prevLeftWidth, prevRightWidth
+    prevClassListWidth, prevLeftWidth, prevRightWidth, redistributePanelWidths
   ]);
-  
-  // Helper function to redistribute panel widths when center panel is reopened
-  const redistributePanelWidths = () => {
-    // Get the original proportions between panels
-    const totalSidePanels = 
-      (classListVisible ? prevClassListWidth : 0) + 
-      (leftVisible ? prevLeftWidth : 0) + 
-      (rightVisible ? prevRightWidth : 0);
-    
-    if (totalSidePanels === 0) return;
-    
-    // Target center width should be close to prevCenterWidth but adjusted for currently visible panels
-    const targetCenterWidth = Math.min(prevCenterWidth, 60); // Limit max center width to 60%
-    const remainingWidth = 100 - targetCenterWidth;
-    
-    // Count visible panels
-    const visiblePanels = 
-      (classListVisible ? 1 : 0) + 
-      (leftVisible ? 1 : 0) + 
-      (rightVisible ? 1 : 0);
-      
-    if (visiblePanels === 0) return;
-    
-    // Distribute remaining width proportionally among visible panels
-    if (classListVisible) {
-      setClassListWidth(remainingWidth * (prevClassListWidth / totalSidePanels));
-    }
-    
-    if (leftVisible) {
-      setLeftWidth(remainingWidth * (prevLeftWidth / totalSidePanels));
-    }
-    
-    if (rightVisible) {
-      setRightWidth(remainingWidth * (prevRightWidth / totalSidePanels));
-    }
-  };
   
   // If center is hidden, distribute its space proportionally to visible panels
   // eslint-disable-next-line react-hooks/exhaustive-deps

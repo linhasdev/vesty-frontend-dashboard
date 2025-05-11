@@ -51,6 +51,7 @@ export default function Home() {
   const [pageReady, setPageReady] = useState(false);
   
   // Preload background image
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const bgImage = new Image();
     bgImage.src = "https://storage.googleapis.com/test2324234242/ChatGPT_Image_Apr_21_2025_11_55_35_PM_1.png";

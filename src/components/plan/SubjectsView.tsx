@@ -135,6 +135,7 @@ export default function SubjectsView() {
 
   useEffect(() => {
     fetchSubjectsData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchSubjectsData = async () => {

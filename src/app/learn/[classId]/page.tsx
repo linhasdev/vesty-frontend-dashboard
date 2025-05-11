@@ -154,7 +154,7 @@ export default async function ClassPage({ params }: ClassPageProps) {
                 <strong>Possible solutions:</strong>
               </p>
               <ul className="mt-2 text-xs text-gray-700 list-disc pl-4 space-y-1">
-                <li>Check that the 'classes_dataset' table exists in your database</li>
+                <li>Check that the &apos;classes_dataset&apos; table exists in your database</li>
                 <li>Make sure the table has a primary key column matching the URL parameter ({classId})</li>
                 <li>Verify column names in your database match the ones used in the code</li>
               </ul>

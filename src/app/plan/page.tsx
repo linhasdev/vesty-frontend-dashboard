@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ViewPill from '../../components/plan/ViewPill';
@@ -188,7 +188,7 @@ export default function PlanPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const views = ["Your Classes", "Calendar", "Subjects", "Progress"];
+  const views = useMemo(() => ["Your Classes", "Calendar", "Subjects", "Progress"], []);
   const [currentView, setCurrentView] = useState(views[0]);
   const [isMobile, setIsMobile] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -196,6 +196,7 @@ export default function PlanPage() {
   const [pageReady, setPageReady] = useState(false);
 
   // Preload background image
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const bgImage = new Image();
     bgImage.src = "https://storage.googleapis.com/test2324234242/ChatGPT_Image_Apr_21_2025_11_55_35_PM_1.png";
