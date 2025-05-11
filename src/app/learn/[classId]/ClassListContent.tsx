@@ -475,7 +475,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
             </svg>
           </button>
           
-          <h2 className="font-['Inter'] text-[16px] font-normal text-gray-800 mx-1 px-1">
+          <h2 className="font-[&quot;Inter&quot;] text-[16px] font-normal text-gray-800 mx-1 px-1">
             {currentView === 'days' ? 'Suas Aulas' : 'Matérias'}
           </h2>
           
@@ -529,7 +529,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className={`font-['Inter'] text-[15px] font-medium ${isToday(day) ? 'text-blue-700' : 'text-gray-800'}`}>
+                      <h3 className={`font-[&quot;Inter&quot;] text-[15px] font-medium ${isToday(day) ? 'text-blue-700' : 'text-gray-800'}`}>
                         {formatDateDisplay(day)}
                         {isToday(day) && (
                           <span className="ml-2 text-xs text-white bg-blue-500 px-2 py-0.5 rounded-full">
@@ -601,7 +601,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
                               <div>
                                 <div className="text-[14px] text-gray-800">{classItem.name}</div>
                                 <div className="text-[12px] text-gray-500">
-                                  {classItem.subSubjectName} · {Math.floor(classItem.duration / 60)} min
+                                  {classItem.subSubjectName} &middot; {Math.floor(classItem.duration / 60)} min
                                 </div>
                               </div>
                             </div>
@@ -637,7 +637,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
                         className="w-3 h-3 rounded-full mr-2" 
                         style={{ backgroundColor: subject.color }}
                       ></div>
-                      <h3 className={`font-['Inter'] text-[15px] font-medium ${subject.isCurrent ? 'text-blue-700' : 'text-gray-800'}`}>
+                      <h3 className={`font-[&quot;Inter&quot;] text-[15px] font-medium ${subject.isCurrent ? 'text-blue-700' : 'text-gray-800'}`}>
                         {subject.name}
                       </h3>
                     </div>
@@ -724,7 +724,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
                                   <div>
                                     <div className="text-[14px] text-gray-800">{classItem.name}</div>
                                     <div className="text-[12px] text-gray-500">
-                                      {Math.floor(classItem.duration / 60)} min
+                                      {classItem.subSubjectName} &middot; {Math.floor(classItem.duration / 60)} min
                                     </div>
                                   </div>
                                 </div>
