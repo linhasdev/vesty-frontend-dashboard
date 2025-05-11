@@ -110,7 +110,7 @@ const getDisplayName = (date: Date, today: Date): string => {
   // Simple date difference calculation by components
   const isToday = dateYear === todayYear && dateMonth === todayMonth && dateDay === todayDay;
   
-  // Calculate yesterday/tomorrow by simply checking if it's one day difference
+  // Calculate yesterday/tomorrow by simply checking if it&apos;s one day difference
   const isYesterday = 
     (dateYear === todayYear && dateMonth === todayMonth && dateDay === todayDay - 1) ||
     (dateDay === new Date(todayYear, todayMonth, 0).getDate() && dateMonth === todayMonth - 1);
@@ -187,7 +187,7 @@ const normalizeDBDate = (dateStr: string): string => {
         month = parseInt(parts[1], 10);
         year = parseInt(parts[2], 10);
         
-        // Check if it's more likely MM/DD/YYYY
+        // Check if it&apos;s more likely MM/DD/YYYY
         if (parseInt(parts[0], 10) > 12 && parseInt(parts[1], 10) <= 12) {
           // Switch day and month if day value is > 12
           day = parseInt(parts[1], 10);
@@ -639,7 +639,7 @@ export function useClassSchedule() {
         // Format time range
         const timeRange = formatTimeRange(entry.start_time, entry.finish_time);
         
-        // Initialize the date group if it doesn't exist
+        // Initialize the date group if it doesn&apos;t exist
         if (!groupedByDate[dateStr]) {
           groupedByDate[dateStr] = { 
             date: dateStr,

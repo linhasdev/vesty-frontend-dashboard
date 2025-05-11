@@ -282,7 +282,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
     // Go through all days and their subjects
     for (const day of classDays) {
       for (const subject of day.subjects) {
-        // Create subject entry if it doesn't exist
+        // Create subject entry if it doesn&apos;t exist
         if (!subjectsMap[subject.name]) {
           let isCurrentSubject = false;
           
@@ -320,7 +320,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
           const subSubjectId = classItem.subSubjectId;
           const subSubjectName = classItem.subSubjectName;
           
-          // Create sub-subject entry if it doesn't exist
+          // Create sub-subject entry if it doesn&apos;t exist
           if (!subjectsMap[subject.name].subSubjects[subSubjectName]) {
             subjectsMap[subject.name].subSubjects[subSubjectName] = {
               id: subSubjectId,

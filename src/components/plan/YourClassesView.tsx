@@ -185,7 +185,7 @@ export default function YourClassesView() {
     );
   }
   
-  // Show error state if there's an error
+  // Show error state if there&apos;s an error
   if (error) {
     return (
       <div className="relative w-full pb-10 px-4 mt-2">

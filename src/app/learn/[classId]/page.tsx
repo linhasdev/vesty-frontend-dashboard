@@ -108,7 +108,7 @@ function getEmbedUrl(url: string): string {
     }
   }
   
-  // If it's already an embed URL or other type, return as is
+  // If it&apos;s already an embed URL or other type, return as is
   return url;
 }
 

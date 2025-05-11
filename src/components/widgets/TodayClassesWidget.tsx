@@ -148,7 +148,7 @@ export default function TodayClassesWidget() {
         setNextClassIndex(1); // Set to second subject
         setExpandedSubjects([1]); // Auto-expand the next class
       } else if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 0) {
-        // If there's only one subject, don't set a next class
+        // If there's only one subject, don&apos;t set a next class
         setNextClassIndex(-1);
       }
     }
