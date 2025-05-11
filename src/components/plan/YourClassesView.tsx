@@ -5,6 +5,7 @@ import SubjectPill from './SubjectPill';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClassSchedule, ClassInfo } from '../../lib/hooks/useClassSchedule';
 import { CalendarClock, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function YourClassesView() {
   const { classDays, loading, error, currentDate, navigateRelative } = useClassSchedule();
@@ -14,6 +15,7 @@ export default function YourClassesView() {
   const [forceExitLoading, setForceExitLoading] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const router = useRouter();
   
   // Required minimum distance traveled to be considered swipe
   const minSwipeDistance = 50;
@@ -524,11 +526,10 @@ export default function YourClassesView() {
                                               }}
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (cls.link && cls.link.trim() !== '') {
-                                                  window.open(cls.link, '_blank', 'noopener,noreferrer');
-                                                }
+                                                // Navigate to the dynamic class page with the class ID
+                                                router.push(`/learn/${cls.id}`);
                                               }}
-                                              style={{ cursor: cls.link && cls.link.trim() !== '' ? 'pointer' : 'default' }}
+                                              style={{ cursor: 'pointer' }}
                                             >
                                               <div className="flex items-center">
                                                 <span className="text-xs sm:text-sm text-gray-500 min-w-5">{cls.order}.</span>

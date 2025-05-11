@@ -441,7 +441,7 @@ export function useClassSchedule() {
   }, []);
 
   // Calculate dates needed for the view
-  const getRequiredDateRange = useCallback((centerDate: Date, daysToShow = 31) => {
+  const getRequiredDateRange = useCallback((centerDate: Date, daysToShow = 365) => {
     const halfRange = Math.floor(daysToShow / 2);
     const startDate = new Date(centerDate);
     startDate.setDate(centerDate.getDate() - halfRange);
