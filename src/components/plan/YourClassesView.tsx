@@ -154,7 +154,7 @@ export default function YourClassesView() {
       classDays.forEach(day => {
         if (day.subjects && day.subjects.length > 0) {
           day.subjects.forEach(subject => {
-            // Check if the subject date matches the day's actualDate
+            // Check if the subject date matches the day&apos;s actualDate
             const datesMatch = day.actualDate === subject.date;
             
             if (!datesMatch) {
@@ -233,7 +233,7 @@ export default function YourClassesView() {
     subjects: day.subjects.map(subject => ({
       name: subject.name,
       date: subject.date,
-      // Check if subject date matches day date
+      // Check date match
       dateMatch: subject.date === day.actualDate
     }))
   })));
