@@ -452,7 +452,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
           </svg>
         </div>
         <h3 className="text-sm font-medium text-gray-800">No classes scheduled</h3>
-        <p className="text-xs text-gray-500 mt-1">You don't have any upcoming classes</p>
+        <p className="text-xs text-gray-500 mt-1">You don&apos;t have any upcoming classes</p>
       </div>
     );
   }
