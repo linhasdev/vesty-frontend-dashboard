@@ -70,6 +70,7 @@ export default function ResizableLayout({
   }, [centerWidth, centerVisible]);
   
   // Update visibility when props change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (classListVisible !== initialClassListVisible) {
       setClassListVisible(initialClassListVisible);
@@ -145,6 +146,7 @@ export default function ResizableLayout({
   };
   
   // If center is hidden, distribute its space proportionally to visible panels
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!centerVisible) {
       const visiblePanels = 

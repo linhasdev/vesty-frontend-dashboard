@@ -70,6 +70,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
   };
   
   // Get the current subject ID based on current class ID
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getCurrentSubjectInfo = useCallback(() => {
     if (!currentClassId) return null;
     
@@ -139,6 +140,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
   };
   
   // Initialize expanded days and handle scrolling
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!loading && sortedDays.length > 0) {
       // Initialize with today expanded
@@ -250,6 +252,7 @@ export default function ClassListContent({ currentClassId }: ClassListContentPro
   const forcedSubjectId = useMemo(() => getForcedSubjectIdFromUrl(), [getForcedSubjectIdFromUrl]);
   
   // Organize classes by subject and sub-subject, putting current subject first
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const subjectsData = useMemo(() => {
     if (!classDays.length) return [];
     

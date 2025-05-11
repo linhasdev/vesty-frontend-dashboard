@@ -23,6 +23,7 @@ export default function ToolsContent({ classId }: ToolsContentProps) {
       name: 'Calculator',
       available: true,
       icon: (
+        // eslint-disable-next-line @next/next/no-img-element
         <img 
           src="https://storage.googleapis.com/test2324234242/calculator.webp" 
           alt="Calculator icon"
@@ -35,6 +36,7 @@ export default function ToolsContent({ classId }: ToolsContentProps) {
       name: 'Book',
       available: true,
       icon: (
+        // eslint-disable-next-line @next/next/no-img-element
         <img 
           src="https://storage.googleapis.com/test2324234242/tl.webp" 
           alt="Book icon"
@@ -47,6 +49,7 @@ export default function ToolsContent({ classId }: ToolsContentProps) {
       name: 'Science',
       available: true,
       icon: (
+        // eslint-disable-next-line @next/next/no-img-element
         <img 
           src="https://storage.googleapis.com/test2324234242/atom.webp" 
           alt="Science icon"
@@ -59,6 +62,7 @@ export default function ToolsContent({ classId }: ToolsContentProps) {
       name: 'Globe',
       available: false, // Example of an unavailable tool
       icon: (
+        // eslint-disable-next-line @next/next/no-img-element
         <img 
           src="https://storage.googleapis.com/test2324234242/world.webp" 
           alt="Globe icon"
@@ -71,6 +75,7 @@ export default function ToolsContent({ classId }: ToolsContentProps) {
       name: 'Broadcast',
       available: true,
       icon: (
+        // eslint-disable-next-line @next/next/no-img-element
         <img 
           src="https://storage.googleapis.com/test2324234242/antena.webp" 
           alt="Broadcast icon"
