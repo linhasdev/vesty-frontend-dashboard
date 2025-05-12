@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { InfoPayload } from '@/app/lib/hooks/useVideoEvents';
 
@@ -25,6 +25,7 @@ interface InfoCardProps {
 export default function InfoCard({ info, onClose }: InfoCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Handle both old and new payload formats
   const getTitle = () => {
@@ -77,6 +78,27 @@ export default function InfoCard({ info, onClose }: InfoCardProps) {
   const isGoogleStorageUrl = (url: string) => {
     return url?.includes('storage.googleapis.com');
   };
+  
+  // Simpler approach to preload images
+  useEffect(() => {
+    if (media && media.type === 'image') {
+      // Create a simple image element to preload the image
+      const preloadImg = document.createElement('img');
+      
+      // Set up event handlers
+      preloadImg.onload = () => setImageLoaded(true);
+      preloadImg.onerror = () => {
+        setImageError(true);
+        setImageLoaded(true);
+      };
+      
+      // Start loading the image
+      preloadImg.src = media.src;
+    } else {
+      // No image to load, set as loaded
+      setImageLoaded(true);
+    }
+  }, [media]);
 
   return (
     <>
@@ -156,6 +178,15 @@ export default function InfoCard({ info, onClose }: InfoCardProps) {
             transform: translateX(100%);
           }
         }
+        
+        .image-loading {
+          opacity: 0;
+          transition: opacity 0.3s ease-in;
+        }
+        
+        .image-loaded {
+          opacity: 1;
+        }
       `}</style>
 
       <div className={`card-container backdrop-blur-lg bg-white/70 rounded-xl shadow-lg overflow-hidden border border-white/30 max-w-full w-full ${isMediaOnly ? 'media-only-card' : ''} ${isClosing ? 'card-closing' : ''}`}>
@@ -202,18 +233,26 @@ export default function InfoCard({ info, onClose }: InfoCardProps) {
               <div className="mt-6 lg:mt-0 lg:flex-1 fade-in-text">
                 {media.type === 'image' && (
                   <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-md">
+                    {!imageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100/40 rounded-lg">
+                        <div className="animate-pulse h-full w-full bg-gray-200/50"></div>
+                      </div>
+                    )}
+
                     {isGoogleStorageUrl(media.src) || imageError ? (
                       <img 
                         src={media.src}
                         alt={media.alt}
-                        className="object-cover w-full h-full rounded-lg"
+                        className={`object-cover w-full h-full rounded-lg ${imageLoaded ? 'image-loaded' : 'image-loading'}`}
+                        onLoad={() => setImageLoaded(true)}
                       />
                     ) : (
                       <Image 
                         src={media.src} 
                         alt={media.alt}
                         fill
-                        className="object-cover rounded-lg"
+                        className={`object-cover rounded-lg ${imageLoaded ? 'image-loaded' : 'image-loading'}`}
+                        onLoad={() => setImageLoaded(true)}
                         onError={() => setImageError(true)}
                       />
                     )}
