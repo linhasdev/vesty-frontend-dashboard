@@ -1,19 +1,39 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import ClientLayout from './ClientLayout';
+import ClientLayout from '../../app/learn/[classId]/ClientLayout';
+import { PanelLeft } from 'lucide-react';
+
+interface VideoInfo {
+  type: 'youtube' | 'vimeo' | 'google-storage' | 'direct';
+  url: string;
+}
 
 interface HeaderWithPanelsProps {
   classData: any;
-  embedUrl: string;
+  videoInfo: VideoInfo;
   classId: string;
 }
 
-export default function HeaderWithPanels({ classData, embedUrl, classId }: HeaderWithPanelsProps) {
+export default function HeaderWithPanels({ classData, videoInfo, classId }: HeaderWithPanelsProps) {
   const [leftPanelVisible, setLeftPanelVisible] = useState(true);
   const [rightPanelVisible, setRightPanelVisible] = useState(false);
   const [centerPanelVisible, setCenterPanelVisible] = useState(true);
   const [classListVisible, setClassListVisible] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    // Create and dispatch a custom event to notify the parent ClientLayout component
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    
+    // Dispatch custom event to notify parent component
+    const event = new CustomEvent('toggleSidebar', {
+      detail: { isOpen: newState }
+    });
+    window.dispatchEvent(event);
+  };
   
   // Toggle left panel and dispatch event
   const toggleLeftPanel = (isVisible: boolean) => {
@@ -83,12 +103,26 @@ export default function HeaderWithPanels({ classData, embedUrl, classId }: Heade
   
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="h-14 px-8 flex items-center justify-between bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center ml-16">
+      <div className="h-14 px-4 flex items-center justify-between bg-white shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center">
+          {/* Sidebar toggle button */}
+          <button 
+            onClick={toggleSidebar}
+            className="text-gray-700 hover:text-gray-900 transition-colors p-1.5 hover:bg-gray-50 rounded-md mr-6"
+            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+          >
+            <PanelLeft 
+              size={20} 
+              className={`transition-transform duration-200 ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`} 
+            />
+            <span className="sr-only">Toggle Sidebar</span>
+          </button>
+          
           {/* Title as button - toggles class list panel */}
           <button 
             onClick={handleTitleClick}
-            className="font-['Inter'] text-[18px] text-gray-700 font-medium hover:text-gray-900 transition-colors px-1.5 py-0.5 hover:bg-gray-50 rounded flex items-center gap-3"
+            className="font-['Inter'] text-[18px] font-medium hover:text-gray-900 transition-colors px-1.5 py-0.5 hover:bg-gray-50 rounded flex items-center gap-3"
+            style={{ color: "#4b5563" }}
           >
             {/* Play icon */}
             <svg 
@@ -101,7 +135,7 @@ export default function HeaderWithPanels({ classData, embedUrl, classId }: Heade
               strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round" 
-              className="text-gray-700"
+              style={{ color: "#4b5563" }}
             >
               <circle cx="12" cy="12" r="10"/>
               <polygon points="10 8 16 12 10 16 10 8"/>
@@ -176,7 +210,7 @@ export default function HeaderWithPanels({ classData, embedUrl, classId }: Heade
       <div className="flex-1 overflow-hidden">
         <ClientLayout 
           classData={classData} 
-          embedUrl={embedUrl} 
+          videoInfo={videoInfo} 
           classId={classId}
           classListVisible={classListVisible}
           onPanelStateChange={handlePanelStateChange}

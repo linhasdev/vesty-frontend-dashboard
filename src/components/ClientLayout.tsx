@@ -34,12 +34,21 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     // Check initially
     checkIfMobile();
     
-    // Setup listener
+    // Setup listener for window resize
     window.addEventListener('resize', checkIfMobile);
+    
+    // Setup listener for custom toggleSidebar event
+    const handleToggleSidebar = (event: any) => {
+      const { isOpen } = event.detail;
+      setSidebarOpen(isOpen);
+    };
+    
+    window.addEventListener('toggleSidebar', handleToggleSidebar);
     
     // Cleanup
     return () => {
       window.removeEventListener('resize', checkIfMobile);
+      window.removeEventListener('toggleSidebar', handleToggleSidebar);
     };
   }, []);
 
@@ -77,18 +86,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
             
             {/* Main content */}
             <div className="flex-1 flex flex-col h-screen relative">
-              {/* Floating toggle button without header */}
-              <button 
-                onClick={toggleSidebar}
-                className="absolute top-4 left-4 h-10 w-10 p-2 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-md border border-white/30 shadow-md hover:bg-white/30 transition-colors duration-200 z-50"
-                aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-              >
-                <PanelLeft 
-                  size={20} 
-                  className={`sidebar-transition text-black ${sidebarOpen ? 'rotate-0' : 'rotate-180'}`} 
-                />
-                <span className="sr-only">Toggle Sidebar</span>
-              </button>
+              {/* Floating toggle button removed */}
               
               <main className="flex-1 overflow-hidden">
                 {children}

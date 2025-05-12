@@ -2,9 +2,16 @@ import { notFound } from 'next/navigation';
 import supabase from '@/lib/supabase/supabase';
 import dynamic from 'next/dynamic';
 import React from 'react';
+import { unstable_noStore as noStore, revalidatePath } from 'next/cache';
 
 // Create a HeaderWithPanels component as a separate file to avoid the "use client" directive issue
-const HeaderWithPanels = dynamic(() => import('./HeaderWithPanels'), { ssr: false });
+const HeaderWithPanels = dynamic(() => import('../../../components/Learning/HeaderWithPanels'), { ssr: false });
+
+// Define VideoInfo type to match the one in HeaderWithPanels
+interface VideoInfo {
+  type: 'youtube' | 'vimeo' | 'google-storage' | 'direct';
+  url: string;
+}
 
 interface ClassPageProps {
   params: {
@@ -19,6 +26,9 @@ interface DatabaseError {
 
 // Function to fetch class data from Supabase
 async function getClassData(classId: string) {
+  // Disable caching for this data request
+  noStore();
+  
   try {
     console.log(`Fetching class data for classId: ${classId}`);
     
@@ -78,17 +88,15 @@ async function getClassData(classId: string) {
   }
 }
 
-// Function to convert regular video links to embed URLs
-function getEmbedUrl(url: string): string {
-  if (!url) return '';
+// Function to determine the type of video URL and how to handle it
+function getVideoInfo(url: string): VideoInfo {
+  if (!url) return { type: 'direct', url: '' };
   
   // YouTube URL conversion
   if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
-    // Extract video ID from YouTube URL
     let videoId = '';
     
     if (url.includes('youtube.com/watch')) {
-      // Server-safe URL parsing
       const videoIdMatch = url.match(/[?&]v=([^&]+)/);
       videoId = videoIdMatch ? videoIdMatch[1] : '';
     } else if (url.includes('youtu.be/')) {
@@ -96,7 +104,7 @@ function getEmbedUrl(url: string): string {
     }
     
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}`;
+      return { type: 'youtube', url: `https://www.youtube.com/embed/${videoId}` };
     }
   }
   
@@ -104,12 +112,23 @@ function getEmbedUrl(url: string): string {
   if (url.includes('vimeo.com/')) {
     const vimeoId = url.split('vimeo.com/')[1]?.split(/[?#]/)[0] || '';
     if (vimeoId) {
-      return `https://player.vimeo.com/video/${vimeoId}`;
+      return { type: 'vimeo', url: `https://player.vimeo.com/video/${vimeoId}` };
     }
   }
   
-  // If it&apos;s already an embed URL or other type, return as is
-  return url;
+  // Google Storage API URL detection
+  if (url.includes('storage.googleapis.com') || url.includes('storage.cloud.google.com')) {
+    console.log('Detected Google Storage URL:', url);
+    // Add cache busting parameter to avoid caching issues
+    const cacheBuster = `?cb=${Date.now()}`;
+    return { type: 'google-storage', url: `${url}${cacheBuster}` };
+  }
+  
+  // Default to direct URL
+  console.log('Using direct URL for video:', url);
+  // Add cache busting parameter to avoid caching issues
+  const cacheBuster = `?cb=${Date.now()}`;
+  return { type: 'direct', url: `${url}${cacheBuster}` };
 }
 
 export default async function ClassPage({ params }: ClassPageProps) {
@@ -118,6 +137,9 @@ export default async function ClassPage({ params }: ClassPageProps) {
   if (!classId) {
     return notFound();
   }
+
+  // Revalidate this page to ensure fresh data
+  revalidatePath(`/learn/${classId}`);
 
   // Fetch class data from Supabase
   const { data: classData, error, columnNames = [] } = await getClassData(classId);
@@ -165,14 +187,20 @@ export default async function ClassPage({ params }: ClassPageProps) {
     );
   }
 
-  // Prepare the embed URL for the video player
-  const embedUrl = classData.link ? getEmbedUrl(classData.link) : '';
+  // Add a console log to check what data we're getting from the database
+  console.log('Class data link:', classData.link);
+  
+  // Get video info based on the link type
+  const videoInfo = classData.link ? getVideoInfo(classData.link) : { type: 'direct' as const, url: '' };
+  
+  // Log what we're passing to the component
+  console.log('Video info being passed to components:', videoInfo);
   
   // We need to pass the data to a client component for the resizable layout
   return (
     <HeaderWithPanels 
       classData={classData} 
-      embedUrl={embedUrl} 
+      videoInfo={videoInfo}
       classId={classId}
     />
   );

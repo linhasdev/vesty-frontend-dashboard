@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDesmos } from '../../app/lib/hooks/useDesmos';
 
 interface Tool {
   id: string;
@@ -15,6 +16,19 @@ interface ToolsContentProps {
 
 export default function ToolsContent({ classId }: ToolsContentProps) {
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  const { containerRef, initialize } = useDesmos();
+  
+  // Use useCallback to memoize the function that initializes the calculator
+  const initializeCalculator = useCallback(() => {
+    if (activeToolId === 'calculator') {
+      initialize();
+    }
+  }, [activeToolId, initialize]);
+  
+  // Initialize calculator when the calculator tool is selected
+  useEffect(() => {
+    initializeCalculator();
+  }, [initializeCalculator]);
   
   // Define the available tools
   const tools: Tool[] = [
@@ -118,44 +132,50 @@ export default function ToolsContent({ classId }: ToolsContentProps) {
       </div>
       
       {/* Tool content area */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto">
         {activeToolId ? (
-          <div>
-            <h3 className="text-lg font-medium mb-4">{tools.find(t => t.id === activeToolId)?.name}</h3>
-            
-            {/* Placeholder content for each tool */}
+          <>
+            {/* Desmos calculator - full height with no card */}
             {activeToolId === 'calculator' && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-600">Calculator tool will be implemented here</p>
-              </div>
+              <div 
+                ref={containerRef}
+                className="w-full h-full min-h-[calc(100vh-140px)]"
+              ></div>
             )}
             
-            {activeToolId === 'book' && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-600">Book reference tool will be implemented here</p>
+            {/* Other tools */}
+            {activeToolId !== 'calculator' && (
+              <div className="h-full p-4">
+                <h3 className="text-lg font-medium mb-4">{tools.find(t => t.id === activeToolId)?.name}</h3>
+                
+                {activeToolId === 'book' && (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-gray-600">Book reference tool will be implemented here</p>
+                  </div>
+                )}
+                
+                {activeToolId === 'science' && (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-gray-600">Science tool will be implemented here</p>
+                  </div>
+                )}
+                
+                {activeToolId === 'globe' && (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-gray-600">Globe tool will be implemented here</p>
+                  </div>
+                )}
+                
+                {activeToolId === 'broadcast' && (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-gray-600">Broadcast tool will be implemented here</p>
+                  </div>
+                )}
               </div>
             )}
-            
-            {activeToolId === 'science' && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-600">Science tool will be implemented here</p>
-              </div>
-            )}
-            
-            {activeToolId === 'globe' && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-600">Globe tool will be implemented here</p>
-              </div>
-            )}
-            
-            {activeToolId === 'broadcast' && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-600">Broadcast tool will be implemented here</p>
-              </div>
-            )}
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full">
+          <div className="flex flex-col items-center justify-center h-full p-4">
             <h3 className="text-lg font-medium text-gray-500">Select a tool to get started</h3>
             <p className="text-sm text-gray-400 mt-2">Choose from the options above</p>
           </div>

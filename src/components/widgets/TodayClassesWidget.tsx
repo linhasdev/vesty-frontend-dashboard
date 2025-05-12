@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function TodayClassesWidget() {
+  const router = useRouter();
   const { classDays, loading } = useClassSchedule();
   const [todayData, setTodayData] = useState<ClassDay | null>(null);
   const [nextClassIndex, setNextClassIndex] = useState<number>(-1);
@@ -143,13 +145,10 @@ export default function TodayClassesWidget() {
       
       setProcessedClasses(classesMap);
       
-      // Always set the next class to be the second subject if it exists
-      if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 1) {
-        setNextClassIndex(1); // Set to second subject
-        setExpandedSubjects([1]); // Auto-expand the next class
-      } else if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 0) {
-        // If there's only one subject, don&apos;t set a next class
-        setNextClassIndex(-1);
+      // Set the next class to be the first subject (index 0)
+      if (classDays[todayIndex].subjects && classDays[todayIndex].subjects.length > 0) {
+        setNextClassIndex(0); // Set to first subject
+        setExpandedSubjects([]); // Don't auto-expand any subject by default
       }
     }
   }, [classDays]);
@@ -215,16 +214,16 @@ export default function TodayClassesWidget() {
     if (!todayData?.subjects) return '';
     
     if (subjectIndex < nextClassIndex) {
-      return classIndex === 0 ? 'Em progresso' : 'Concluído'; // First class in progress, others completed
+      return 'Concluído'; // Classes in subjects before the next class are completed
     } else if (subjectIndex === nextClassIndex) {
       if (classIndex === 0) {
-        return 'Próximo'; // Next up
-      } else if (classIndex === 1) {
-        return 'Próximo'; // Also next
+        return 'Em progresso'; // First class of the next subject is in progress
+      } else {
+        return 'Próximo'; // Other classes in the same subject are next
       }
     }
     
-    return 'Não iniciado'; // Default to "Not started" instead of empty string
+    return 'Não iniciado'; // Default to "Not started"
   };
   
   // Check if class is "watched" (completed) based on progress percentage
@@ -382,7 +381,6 @@ export default function TodayClassesWidget() {
                       : "Veja seu cronograma"
                     }
                   </p>
-                  <span className="bg-[#10B981] text-white text-xs px-2 py-0.5 rounded-full font-medium">hoje</span>
                 </div>
               </div>
               
@@ -634,17 +632,21 @@ export default function TodayClassesWidget() {
                                               </div>
                                             </div>
                                             
-                                            {cls.link && (
-                                              <a 
-                                                href={cls.link} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="p-2 rounded-full bg-white/15 border border-white/30 shadow-sm hover:shadow-md hover:bg-white/25 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center justify-center"
-                                              >
-                                                <LinkIcon size={15} className="text-[var(--accent-blue)]" />
-                                              </a>
-                                            )}
+                                            {/* Always show the link icon whether cls.link exists or not */}
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                if (cls.id) {
+                                                  const targetPath = `/learn/${cls.id}`;
+                                                  console.log(`Navigating to: ${targetPath}`);
+                                                  router.push(targetPath);
+                                                }
+                                              }}
+                                              className="p-2 rounded-full bg-white/15 border border-white/30 shadow-sm hover:shadow-md hover:bg-white/25 hover:scale-105 transition-all duration-200 cursor-pointer flex items-center justify-center"
+                                            >
+                                              <LinkIcon size={15} className="text-[var(--accent-blue)]" />
+                                            </button>
                                           </div>
                                         </div>
                                       );

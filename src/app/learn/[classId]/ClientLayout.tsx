@@ -1,23 +1,111 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import ResizableLayout from './ResizableLayout';
-import VideoPlayer from './VideoPlayer';
-import PlaceholderContent from './PlaceholderContent';
-import ClassListContent from './ClassListContent';
-import ToolsContent from './ToolsContent';
+import React, { useState, useEffect, useRef } from 'react';
+import ResizableLayout from '../../../components/Learning/ResizableLayout';
+import VideoPlayer from '../../../components/Learning/VideoPlayer';
+import PlaceholderContent from '../../../components/Learning/PlaceholderContent';
+import ClassListContent from '../../../components/Learning/ClassListContent';
+import ToolsContent from '../../../components/Learning/ToolsContent';
+import VideoEventsContainer from '../../../components/Learning/dynamic_cards/VideoEventsContainer';
+
+interface VideoInfo {
+  type: 'youtube' | 'vimeo' | 'google-storage' | 'direct';
+  url: string;
+}
 
 interface ClientLayoutProps {
   classData: any;
-  embedUrl: string;
+  videoInfo: VideoInfo;
   classId: string;
   classListVisible: boolean;
   onPanelStateChange?: (leftPanelVisible: boolean, rightPanelVisible: boolean, centerPanelVisible?: boolean, classListVisible?: boolean) => void;
 }
 
+// Custom component to render different video player types
+const CustomVideoPlayer: React.FC<{ videoInfo: VideoInfo, onVideoRef: (element: HTMLVideoElement | null) => void }> = ({ 
+  videoInfo, 
+  onVideoRef 
+}) => {
+  const [error, setError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Log the video info to debug
+  useEffect(() => {
+    console.log('CustomVideoPlayer received video info:', videoInfo);
+  }, [videoInfo]);
+
+  // Pass video element ref to parent
+  useEffect(() => {
+    if (videoRef.current) {
+      onVideoRef(videoRef.current);
+    }
+    
+    return () => {
+      onVideoRef(null);
+    };
+  }, [onVideoRef, videoRef]);
+
+  if (!videoInfo.url) {
+    return (
+      <div className="w-full h-0 pb-[56.25%] relative bg-gray-900">
+        <div className="absolute inset-0 flex items-center justify-center text-white">
+          <p className="text-lg">No video available for this class</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-0 pb-[56.25%] relative bg-gray-900">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-4">
+          <p className="text-lg mb-2">Error playing video</p>
+          <p className="text-sm opacity-80 text-center">There was a problem loading the video. Please try again later.</p>
+          <div className="mt-4">
+            <button 
+              onClick={() => setError(false)} 
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (videoInfo.type === 'youtube' || videoInfo.type === 'vimeo') {
+    // For YouTube or Vimeo, use iframe embed
+    // Note: iframe-based players cannot be directly tracked for timestamps
+    // So we cannot use the videoRef with these
+    return <VideoPlayer embedUrl={videoInfo.url} />;
+  } else {
+    // For Google Storage and direct URLs, use HTML5 video player
+    return (
+      <div className="w-full h-0 pb-[56.25%] relative bg-black">
+        <video 
+          ref={videoRef}
+          controls 
+          className="absolute inset-0 w-full h-full"
+          preload="metadata"
+          controlsList="nodownload"
+          playsInline
+          onError={() => setError(true)}
+        >
+          <source src={videoInfo.url} type="video/mp4" />
+          <source src={videoInfo.url} type="video/webm" />
+          <p className="text-white text-center absolute inset-0 flex items-center justify-center">
+            Your browser does not support the video tag.
+          </p>
+        </video>
+      </div>
+    );
+  }
+};
+
 export default function ClientLayout({ 
   classData, 
-  embedUrl, 
+  videoInfo, 
   classId,
   classListVisible,
   onPanelStateChange 
@@ -28,6 +116,12 @@ export default function ClientLayout({
   const [rightPanelVisible, setRightPanelVisible] = useState(false);
   const [centerPanelVisible, setCenterPanelVisible] = useState(true);
   const [classListPanelVisible, setClassListPanelVisible] = useState(classListVisible);
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
+  
+  // Handler for receiving video element reference
+  const handleVideoRef = (element: HTMLVideoElement | null) => {
+    setVideoElement(element);
+  };
   
   // Update classListPanelVisible when prop changes
   useEffect(() => {
@@ -87,34 +181,22 @@ export default function ClientLayout({
   
   // Content for left panel - Video player
   const leftContent = (
-    <div className="p-4 bg-gray-100 h-full">
-      <div className="bg-black rounded-md overflow-hidden shadow-md">
-        <VideoPlayer embedUrl={embedUrl} />
-      </div>
-      
-      {classData.description && (
-        <div className="mt-4 bg-white rounded-md p-4 shadow-sm border border-gray-100">
-          <h3 className="text-xs font-medium text-gray-700 mb-2">Description</h3>
-          <p className="text-sm text-gray-600">{classData.description}</p>
-        </div>
-      )}
-      
-      <div className="mt-4 bg-white/60 backdrop-blur-sm rounded-md p-4 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-medium text-gray-700">Class Information</h3>
-          <span className="text-xs text-gray-500">ID: {classId}</span>
+    <div className="p-6 pt-8 bg-gradient-to-b from-gray-100 to-gray-200 h-full overflow-hidden">
+      <div className="flex flex-col items-center overflow-hidden">
+        {/* Card container with glassmorphism effect */}
+        <div className="w-full bg-white/60 backdrop-blur-lg rounded-xl overflow-hidden shadow-[0_2px_4px_rgba(0,0,0,0.05)] border border-white/20 mb-3" 
+          style={{ maxWidth: "95%" }}>
+          {/* Video player with minimal padding */}
+          <div className="p-2">
+            <div className="w-full bg-black rounded-md overflow-hidden shadow-sm">
+              <CustomVideoPlayer videoInfo={videoInfo} onVideoRef={handleVideoRef} />
+            </div>
+          </div>
         </div>
         
-        <div className="mt-3 space-y-2">
-          <div className="flex items-center text-xs text-gray-600">
-            <span className="w-20 text-gray-500">Subject:</span>
-            <span>{classData.subject_name || 'Not specified'}</span>
-          </div>
-          
-          <div className="flex items-center text-xs text-gray-600">
-            <span className="w-20 text-gray-500">Duration:</span>
-            <span>{classData.duration ? `${Math.ceil(classData.duration / 60)} min` : 'Not specified'}</span>
-          </div>
+        {/* Video Events Container - Shows quizzes and info cards based on timestamps */}
+        <div className="w-full px-2 sm:px-4" style={{ maxWidth: "95%" }}>
+          <VideoEventsContainer classId={classId} videoElement={videoElement} />
         </div>
       </div>
     </div>
